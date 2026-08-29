@@ -57,7 +57,7 @@ public:
      */
     enum SquareKind : int16_t {
         kSquareInvalid = -1,         /**< A corrupt square; load() asserts on it. */
-        kSquareStart = 0,            /**< The board start square, recorded in *(+0x54). */
+        kSquareStart = 0,            /**< The board start square, recorded at +0x54. */
         kSquarePlayerStart = 1,      /**< The player spawn square. */
         kSquareDeactivatedBonus = 2, /**< A board-story message or deactivated bonus square. */
         kSquareBonus = 3,            /**< A bonus square; live at roulette 0x12 or HUD state 2. */
@@ -82,7 +82,7 @@ public:
     //
     // NOTE: pointer members below are 4 bytes on the game's 32-bit (ILP32)
     // target, which is what keeps the 0x120 stride exact — the same assumption
-    // the enclosing class layout (m_nodes @ +0x50, m_startSubId @ +0x54, ...)
+    // the enclosing class layout (m_nodes @ +0x50, m_startNode @ +0x54, ...)
     // already relies on.
     /**
      * One board square. The binary's Objective-C value-type name for this record is
@@ -157,11 +157,19 @@ public:
     }
 
     /**
-     * The board's start square id (binary field @ *(+0x54)).
+     * The board's start square (binary field @ +0x54).
+     * @return The kSquareStart node, or nullptr when the map records none.
+     */
+    Node *startNode() const {
+        return m_startNode;
+    }
+
+    /**
+     * The board's start square id.
      * @return The start sub-map id, or 0 when none is recorded.
      */
     int16_t startSubId() const {
-        return m_startSubId ? *m_startSubId : 0;
+        return m_startNode ? m_startNode->id : 0;
     }
     // +0x58 is the malloc'd ConnectStruct edge array; +0x5c is its element count, and both are
     // copied into the arcade play data. The 32-bit binary held the array pointer in a 4-byte int
@@ -220,7 +228,11 @@ private:
     int16_t m_count = 0; // +0x02 node count
     [[maybe_unused]] uint8_t m_pad04[0x50 - 4] = {}; // +0x04 file header padding (memcpy target)
     Node *m_nodes = nullptr;                         // +0x50 node array base (stride 0x120)
-    int16_t *m_startSubId = nullptr;                 // +0x54 default/start node id source
+    // +0x54 the kSquareStart node. load() stores &m_nodes[i].id here, and Node::id is the
+    // record's first field, so the stored address is the node itself. The arcade task's
+    // roulette mode 7 reads this slot with a word ldr at 0x9d04c and uses the result directly
+    // as a Node pointer, so it is one rather than a pointer to the id.
+    Node *m_startNode = nullptr;
     ConnectStruct *m_edges = nullptr; // +0x58 malloc'd edge array (real ptr; was an int slot)
     int16_t m_edgeCount = 0;          // +0x5c edge count (was m_field5c)
     [[maybe_unused]] uint8_t m_tail[0x60 - 0x5e] = {}; // +0x5e tail padding

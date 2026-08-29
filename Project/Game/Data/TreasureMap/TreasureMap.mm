@@ -52,8 +52,8 @@ TreasureMap::~TreasureMap() {
 }
 
 // Ghidra FUN_000ce2e4. Free the two owned heap buffers (the node table at +0x50
-// and the edge array at +0x58 — m_startSubId at +0x54 is only a pointer into
-// the table, not separately owned) and zero the whole 0x60-byte object back to
+// and the edge array at +0x58 — m_startNode at +0x54 only points into the
+// table, and is not separately owned) and zero the whole 0x60-byte object back to
 // its constructed state, exactly as the binary does with its 16-byte NEON
 // stores. (The binary's six overlapping vst1.16 stores clear bytes 0x00..0x5d;
 // the memset of 0x60 clears the whole object identically.)
@@ -153,7 +153,7 @@ void TreasureMap::load(const char *path) {
         } else if (type == TreasureMap::kSquareBonusTreasure) {
             bonusCount++;
         } else if (type == TreasureMap::kSquareStart) {
-            m_startSubId = &m_nodes[i].id; // *(+0x54): the start square
+            m_startNode = &m_nodes[i]; // +0x54: the start square
         }
     }
 
@@ -520,9 +520,7 @@ TreasureMap::Node *TreasureMap::getButtobiSquare(const TreasureMap::Node *curren
             }
         }
     }
-    // Fallback: return the start node (m_startSubId points to Node.id at offset
-    // 0).
-    return reinterpret_cast<TreasureMap::Node *>(m_startSubId);
+    return m_startNode;
 }
 
 // Ghidra: FUN_000cea50

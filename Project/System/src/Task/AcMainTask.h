@@ -7,20 +7,18 @@
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor AcMainTask_ctor
  * FUN_00099ab0, update AcMainTask_update FUN_00099d18).
  *
- * AcMainTask_update is the app's largest function (~24 KB / ~4300 decompiled lines, heavily
- * inlined). It is reconstructed in pieces from the on-disk decompile
- * (.decompile/AcMainTask_update.c): update() is the touch/SE preamble plus a dispatch over the
- * play-data state (@ +0x9f8) into one handler method per state; each state's inlined body is
- * lifted into its own method. Progress tracked in STUBS.md.
+ * AcMainTask_update is the app's largest function (~24 KB, heavily inlined). update() is the
+ * touch/SE preamble plus a dispatch over the play-data state (@ +0x9f8) into one handler method
+ * per state; each state's inlined body is lifted into its own method. All 78 entries of the
+ * dispatch table at 0x99e96, covering states 0x00 to 0x4d, are reconstructed.
  *
  * Work area (this class IS the ~0xa00-byte play-data struct): it is runtime-only, never
  * serialised to or from a file, so its exact byte layout is NOT preserved. The `// +0xNN`
  * comments cross-reference each field's binary offset, but unused gaps are dropped (noted
- * inline) rather than padded, and members are reached by name, not raw offset. A few
- * device-branched select and dialog layout regions (m_selSceneLayout, m_dlgLayoutA/B,
- * m_dlgLayout954) are pure coordinate constants the setup pass writes and only the
- * not-yet-reconstructed select and option draw states read; they are kept as documented
- * write-only arrays, and their interior roles are best-effort. The play state @ +0x9f8 is what
+ * inline) rather than padded, and members are reached by name, not raw offset. The
+ * device-branched layout regions (m_selSceneLayout, m_dlgLayoutA/B) are pure coordinate constants
+ * the setup pass writes and the hit tests and draws read back; m_dlgLayout954 is written but
+ * never read, so its interior roles stay best-effort. The play state @ +0x9f8 is what
  * update() dispatches on; the embedded arcade RNG @ +0x4f4 is a real Random member,
  * auto-constructed and destroyed.
  */
@@ -168,22 +166,90 @@ private:
     void stateRouletteScrollWait();       // case 6 (run the ease, then open the roulette)
     void stateRouletteSpin();             // case 7 (spin, and stop the wheel on a touch)
     void stateRouletteStop();             // case 8 (brake, commit the roll, release the board)
-    void stateBoardStepAdvance();         // case 0x0a (one step of the board walk)
-    void stateSquareMessageOpen();        // case 0x0b (open the square message board)
-    void stateSquareMessageRead();        // case 0x0c (hold the message until a tap)
-    void stateSquareArrive();             // case 0x0d (the token settles on a square)
-    void stateShowArrows();               // case 0x0f (light the directions the square opens on)
-    void stateSquareLabelWait();          // case 0x0e (hold the label, then route the tap)
-    void stateGoalReward();               // case 0x1b (reveal a piece, or pay friendship out)
-    void stateGoalRewardWait();           // case 0x1c (hold while the payout plays)
-    void stateSquareApply();              // case 0x22 (apply the landed square's gimmick)
-    void stateSquareAnimWait();           // case 0x23 (hold for the select effect)
-    void stateButtobiPick();              // case 0x24 (pick the fly-to destination)
-    void stateWarpBegin();                // case 0x1d (resolve the warp partner square)
-    void stateWarpEffect();               // case 0x1e (warp SE, park EFF_WARP_3, arm the squish)
-    void stateWarpArrive();               // case 0x1f (commit the partner square)
-    void stateWarpScroll();               // case 0x20 (ease to the destination, rewind the fx)
-    void stateWarpInWait();               // case 0x21 (wait out the overlay, drop the gate)
+    void stateBoardIdleBonus();           // case 0x09 (start one step of the board walk)
+    /** Choose the forward link to step along, or null while the arrows are up. */
+    const TreasureMap::Node *pickForwardLink();
+    /** The recovery when backing up into a square with no back link. */
+    const TreasureMap::Node *pickBackupLink();
+    /**
+     * Arm the scroll and player eases toward the square being stepped onto.
+     * @param dest The square the token travels to.
+     */
+    void armBoardStepEase(const TreasureMap::Node *dest);
+    void stateBoardStepAdvance();  // case 0x0a (one step of the board walk)
+    void stateSquareMessageOpen(); // case 0x0b (open the square message board)
+    void stateSquareMessageRead(); // case 0x0c (hold the message until a tap)
+    void stateSquareArrive();      // case 0x0d (the token settles on a square)
+    void stateShowArrows();        // case 0x0f (light the directions the square opens on)
+    void stateSquareLabelWait();   // case 0x0e (hold the label, then route the tap)
+    /**
+     * Load a character's board portrait into a texture slot.
+     * @param slot The slot to replace.
+     * @param charaId The character id, formatted into sugo_chara%03d.png.
+     */
+    void loadCharaBoardTexture(std::unique_ptr<neTextureForiOS> &slot, int charaId);
+    /**
+     * Persist every piece a reveal just showed into its TreasureData records.
+     * @param table The pre-reveal duplicate grid to scan.
+     * @param page The map page the reveal belongs to.
+     * @param wallpaper Whether to write the wallpaper field rather than the music one.
+     * @return Whether any record was touched, which asks for a progress reload.
+     */
+    bool commitRevealedPieces(const uint32_t *table, int page, bool wallpaper);
+    void stateMusicPieceView();       // case 0x3b (music board: panel tap or close)
+    void stateMusicPieceReveal();     // case 0x3d (the music reveal, commit on tap)
+    void stateWallBoardIdle();        // case 0x40 (wall board: panel tap or close)
+    void stateWallPieceOpen();        // case 0x42 (the wallpaper open animation)
+    void stateWallPieceView();        // case 0x43 (the full-size wallpaper view)
+    void stateCollectionMenu();       // case 0x38 (route the collection-menu tap)
+    void stateWallBoardOpen();        // case 0x3e (open the wallpaper-piece board)
+    void stateMusicPieceRevealWait(); // case 0x3c (wait for the music-piece reveal)
+    void stateWallBoardOpenWait();    // case 0x3f (wait for the wall board to slide in)
+    void stateWallBoardClose();       // case 0x41 (pad-only wall board close)
+    void stateWallSaveBegin();        // case 0x44 (start the camera-roll save)
+    void stateWallSaveWait();         // case 0x45 (poll the save, alert on failure)
+    void stateWallSaveDone();         // case 0x46 (the saved confirmation panel)
+    void stateCollectionClose();      // case 0x47 (leave the collection screen)
+    void stateCollectionCloseWait();  // case 0x48 (wait for the out panel)
+    void stateMapReloadBegin();       // case 0x49 (start the reload fade)
+    void stateMapReloadWait();        // case 0x4a (rebuild the sugoroku scene)
+    void stateCharaSelectApply();     // case 0x2f (open the confirmation panel)
+    void stateCharaConfirm();         // case 0x30 (commit or cancel the pick)
+    void stateCollectionOpen();       // case 0x36 (play the collection menu in)
+    void stateCollectionOpenWait();   // case 0x37 (wait for the collection menu)
+    void stateMusicPieceOpen();       // case 0x39 (open the music-piece board)
+    void stateMusicPieceOpenWait();   // case 0x3a (wait for the music-piece board)
+    void stateCharaSelectIdle();      // case 0x2b (the character-select hub)
+    void stateCharaGachaRoll();       // case 0x2c (spend tickets, draw a character)
+    void stateCharaGachaReveal();     // case 0x2d (hold the overlay, swap the portrait)
+    /**
+     * Start a chara-select page flip.
+     * @param page The page being flipped to.
+     * @param playSpeed The change layer's direction, positive forwards.
+     */
+    void charaSelectFlipToPage(int page, float playSpeed);
+    void stateCharaChangeOpen();      // case 0x29 (open the character-change panel)
+    void stateCharaChangeOpenWait();  // case 0x2a (hold for the open sweep)
+    void stateCharaGachaClose();      // case 0x2e (refresh the owned-character copy)
+    void stateCharaConfirmCancel();   // case 0x31 (cancel the confirm overlay)
+    void stateCharaSelectClose();     // case 0x32 (start the select close)
+    void stateCharaSelectCloseWait(); // case 0x33 (free the page textures)
+    void stateCharaChangeClose();     // case 0x34 (close after a committed change)
+    void stateCharaChangeCloseWait(); // case 0x35 (free textures, park the arrow)
+    void stateSkillEffect();          // case 0x25 (anchor and play the skill effect)
+    void stateSkillEffectWait();      // case 0x26 (apply the roulette result)
+    void stateVisitorWait();          // case 0x27 (wait out the visitor request)
+    void stateFriendMeetAnim();       // case 0x28 (tick the goal/friend reveal)
+    void stateGoalReward();           // case 0x1b (reveal a piece, or pay friendship out)
+    void stateGoalRewardWait();       // case 0x1c (hold while the payout plays)
+    void stateSquareApply();          // case 0x22 (apply the landed square's gimmick)
+    void stateSquareAnimWait();       // case 0x23 (hold for the select effect)
+    void stateButtobiPick();          // case 0x24 (pick the fly-to destination)
+    void stateWarpBegin();            // case 0x1d (resolve the warp partner square)
+    void stateWarpEffect();           // case 0x1e (warp SE, park EFF_WARP_3, arm the squish)
+    void stateWarpArrive();           // case 0x1f (commit the partner square)
+    void stateWarpScroll();           // case 0x20 (ease to the destination, rewind the fx)
+    void stateWarpInWait();           // case 0x21 (wait out the overlay, drop the gate)
     /**
      * Park an overlay over the player token in screen space.
      * @param layer The layer to position.
@@ -321,7 +387,10 @@ private:
     std::unique_ptr<neTextureForiOS> m_goalCharaTex; // +0xe0 goal / friend-meet character portrait
     std::unique_ptr<neTextureForiOS> m_blindCircleTex; // +0xe4 bundled blind_circle.png
     std::unique_ptr<neTextureForiOS>
-        m_reserveTex[5]; // +0xe8 scene textures freed by dispose (unreconstructed states)
+        // +0xe8 scene textures freed by dispose: [0] the wall-reveal board art, [1] the gacha
+        // award portrait, [2] the chara-confirm portrait, [3] the completed treasure music
+        // artwork and [4] the completed wallpaper.
+        m_reserveTex[5];
     std::unique_ptr<neTextureForiOS> m_pointsDigitTex[10];  // +0xfc num_points0..9 glyphs
     std::unique_ptr<neTextureForiOS> m_roulDigitTex[10];    // +0x124 num_roulette_0..9 glyphs
     std::unique_ptr<neTextureForiOS> m_ticketDigitTex[10];  // +0x14c ticket_num0..9 glyphs

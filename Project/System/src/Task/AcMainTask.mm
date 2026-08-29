@@ -28,6 +28,7 @@
 #import "AudioManager.h"
 #import "CharaInfo.h"
 #import "CharaManager.h"
+#import "CommonAlertView.h"
 #import "DownloadMain.h"
 #import "MainViewController.h"
 #import "MenuMainTask.h"
@@ -35,6 +36,7 @@
 #import "MusicManager.h"
 #import "RhUtil.h"
 #import "SkillData.h"
+#import "StoreUtil.h"
 #import "TreasureData+Store.h"
 #import "TreasureData.h"
 #import "TreasureMap.h"
@@ -49,6 +51,28 @@
 // destructor frees anything still held if the task is destroyed without it.
 AcMainTask::AcMainTask() = default;
 AcMainTask::~AcMainTask() = default;
+
+// Indices into m_rouletteLayers, naming the kRouletteNames slots the roulette sequence drives.
+// These sit above update() because its dispatch passes two of them to a shared handler.
+constexpr int kRouletteLayerOpen = 0;           // ROULETTE_START_OPEN
+constexpr int kRouletteLayerLoop = 1;           // ROULETTE_START_ROOP
+constexpr int kRouletteLayerOpenEvent = 2;      // ROULETTE_START_OPEN_EVENT
+constexpr int kRouletteLayerLoopEvent = 3;      // ROULETTE_START_ROOP_EVENT
+constexpr int kRouletteLayerEff = 4;            // ROULETTE_EFF
+constexpr int kRouletteLayerCharaOpen = 5;      // SELECTION_CHARA_OPEN
+constexpr int kRouletteLayerCharaClose = 6;     // SELECTION_CHARA_CLOSE
+constexpr int kRouletteLayerCommentBoard = 7;   // SUGO_COMMENT_BOARD
+constexpr int kRouletteLayerMusicPieceOpen = 8; // MUSIC_PEACE_OPEN
+constexpr int kRouletteLayerWallPieceOpen = 9;  // WALL_PEACE_OPEN
+constexpr int kRouletteGoalOpen = 10;           // GOAL_OPEN
+constexpr int kRouletteLayerGetMusic = 11;      // GET_MUSIC
+constexpr int kRouletteLayerGetWall = 12;       // GET_WALL
+constexpr int kRouletteLayerGatsha = 13;        // GATSHA_OPEN
+constexpr int kRouletteLayerWallSaveCom = 14;   // WALL_SAVE_COM
+constexpr int kRouletteLayerSkillEffect = 15;   // EFF_SKILL2
+constexpr int kRouletteLayerSkillKouka = 16;    // EFF_SKILL_KOUKA2
+constexpr int kRouletteLayerWarp = 17;          // EFF_WARP_3
+constexpr int kRouletteLayerSelectArrow = 18;   // SELECT_ARROW
 
 // Ghidra: AcMainTask_update (FUN_00099d18). Snapshot the touches (recording a
 // drag anchor and classifying a tap), refresh the "scrolled past the end" flag,
@@ -134,6 +158,9 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateRouletteStop:
         stateRouletteStop();
         break;
+    case kAcMainStateBoardIdleBonus:
+        stateBoardIdleBonus();
+        break;
     case kAcMainStateBoardStepAdvance:
         stateBoardStepAdvance();
         break;
@@ -148,6 +175,120 @@ void AcMainTask::update(int /*deltaMs*/) {
         break;
     case kAcMainStateSquareMessage:
         stateSquareLabelWait();
+        break;
+    case kAcMainStateCollectionMenu:
+        stateCollectionMenu();
+        break;
+    case kAcMainStateMusicPieceView:
+        stateMusicPieceView();
+        break;
+    case kAcMainStateMusicPieceReveal:
+        stateMusicPieceReveal();
+        break;
+    case kAcMainStateWallBoardIdle:
+        stateWallBoardIdle();
+        break;
+    case kAcMainStateWallPieceOpen:
+        stateWallPieceOpen();
+        break;
+    case kAcMainStateWallPieceView:
+        stateWallPieceView();
+        break;
+    case kAcMainStateWallBoardOpen:
+        stateWallBoardOpen();
+        break;
+    case kAcMainStateMusicPieceRevealWait:
+        stateMusicPieceRevealWait();
+        break;
+    case kAcMainStateWallBoardOpenWait:
+        stateWallBoardOpenWait();
+        break;
+    case kAcMainStateWallBoardClose:
+        stateWallBoardClose();
+        break;
+    case kAcMainStateWallSaveBegin:
+        stateWallSaveBegin();
+        break;
+    case kAcMainStateWallSaveWait:
+        stateWallSaveWait();
+        break;
+    case kAcMainStateWallSaveDone:
+        stateWallSaveDone();
+        break;
+    case kAcMainStateCollectionClose:
+        stateCollectionClose();
+        break;
+    case kAcMainStateCollectionCloseWait:
+        stateCollectionCloseWait();
+        break;
+    case kAcMainStateMapReloadBegin:
+        stateMapReloadBegin();
+        break;
+    case kAcMainStateMapReloadWait:
+        stateMapReloadWait();
+        break;
+    case kAcMainStateCharaSelectApply:
+        stateCharaSelectApply();
+        break;
+    case kAcMainStateCharaConfirm:
+        stateCharaConfirm();
+        break;
+    case kAcMainStateCollectionOpen:
+        stateCollectionOpen();
+        break;
+    case kAcMainStateCollectionOpenWait:
+        stateCollectionOpenWait();
+        break;
+    case kAcMainStateMusicPieceOpen:
+        stateMusicPieceOpen();
+        break;
+    case kAcMainStateMusicPieceOpenWait:
+        stateMusicPieceOpenWait();
+        break;
+    case kAcMainStateCharaChangeOpen:
+        stateCharaChangeOpen();
+        break;
+    case kAcMainStateCharaSelectIdle:
+        stateCharaSelectIdle();
+        break;
+    case kAcMainStateCharaGachaRoll:
+        stateCharaGachaRoll();
+        break;
+    case kAcMainStateCharaGachaReveal:
+        stateCharaGachaReveal();
+        break;
+    case kAcMainStateCharaChangeOpenWait:
+        stateCharaChangeOpenWait();
+        break;
+    case kAcMainStateCharaGachaClose:
+        stateCharaGachaClose();
+        break;
+    case kAcMainStateCharaConfirmCancel:
+        stateCharaConfirmCancel();
+        break;
+    case kAcMainStateCharaSelectClose:
+        stateCharaSelectClose();
+        break;
+    case kAcMainStateCharaSelectCloseWait:
+        stateCharaSelectCloseWait();
+        break;
+    case kAcMainStateCharaChangeClose:
+        stateCharaChangeClose();
+        break;
+    case kAcMainStateCharaChangeCloseWait:
+        stateCharaChangeCloseWait();
+        break;
+    case kAcMainStateSkillEffect:
+        stateSkillEffect();
+        break;
+    case kAcMainStateSkillEffectWait:
+        stateSkillEffectWait();
+        break;
+    case kAcMainStateVisitorWait:
+        stateVisitorWait();
+        break;
+    case kAcMainStateFriendMeetAnim:
+        stateFriendMeetAnim();
         break;
     case kAcMainStateGoalReward:
         stateGoalReward();
@@ -363,31 +504,44 @@ void AcMainTask::applyDragScroll(neGraphics &gfx) {
     m_scrollBaseY = m_scrollY - static_cast<float>(fy);
 }
 
-// Indices into m_rouletteLayers, naming the kRouletteNames slots the roulette sequence drives.
-constexpr int kRouletteLayerOpen = 0;         // ROULETTE_START_OPEN
-constexpr int kRouletteLayerLoop = 1;         // ROULETTE_START_ROOP
-constexpr int kRouletteLayerOpenEvent = 2;    // ROULETTE_START_OPEN_EVENT
-constexpr int kRouletteLayerLoopEvent = 3;    // ROULETTE_START_ROOP_EVENT
-constexpr int kRouletteLayerEff = 4;          // ROULETTE_EFF
-constexpr int kRouletteLayerCommentBoard = 7; // SUGO_COMMENT_BOARD
-constexpr int kRouletteLayerSkillKouka = 16;  // EFF_SKILL_KOUKA2
-constexpr int kRouletteLayerWarp = 17;        // EFF_WARP_3
-constexpr int kRouletteGoalOpen = 10;         // GOAL_OPEN
-constexpr int kRouletteLayerGetMusic = 11;    // GET_MUSIC
-constexpr int kRouletteLayerGetWall = 12;     // GET_WALL
-constexpr int kRouletteLayerLiftMusic = 19;   // LIFTING_MUSIC
-constexpr int kRouletteLayerLiftWall = 20;    // LIFTING_WALL
-constexpr int kRouletteLayerLiftMap = 21;     // LIFTING_MAP
+constexpr int kRouletteLayerLiftMusic = 19; // LIFTING_MUSIC
+constexpr int kRouletteLayerLiftWall = 20;  // LIFTING_WALL
+constexpr int kRouletteLayerLiftMap = 21;   // LIFTING_MAP
 // LIFTING_GAOL_BOARD_01_02 through _03_02. The goal payout kicks whichever matches its reward,
 // and each of the three collection reveals clears all of them before playing its own.
 constexpr int kRouletteGoalBoard[3] = {23, 24, 25};
+
+// Indices into m_panelLayers; the names are kPanelNamesDefault' entries.
+constexpr int kPanelCharaSelectOpen = 1; // CHARACTER_SELECTION*_OPEN
+constexpr int kPanelCharaSelectOut = 2;  // CHARACTER_SELECTION*_OUT
+constexpr int kPanelCharaChange = 3;     // CHARACTER_CHANGE*
+constexpr int kPanelCollectionOpen = 4;  // COLLECTION_SELECT_*_OPEN
+constexpr int kPanelCollectionOut = 5;   // COLLECTION_SELECT_*_OUT
+constexpr int kPanelMusicPieceBoard = 6; // MUSIC_PEACE_S_*_OPEN
+constexpr int kPanelWallPieceBoard = 7;  // WALL_PEACE_S_*_OPEN
+
+// The character grid shows six characters to a page, two rows of three, each cell a square.
+constexpr int kCharaCellsPerPage = 6;
+constexpr int kCharaCellsPerRow = 3;
+constexpr int kCharaCellSize = 196;
+// The lottery costs five tickets.
+constexpr int kCharaLotteryCost = 5;
+// GATSHA_OPEN's frame count is retargeted for the roll and again for the close, and the awarded
+// portrait swaps in once the play head passes the reveal frame.
+constexpr int kGachaRollFrames = 152;
+constexpr int kGachaRevealFrame = 146;
+constexpr int kGachaCloseFrames = 197;
+// Characters below this id ship inside the bundle; the rest come from the downloaded assets.
+constexpr int kBundledCharaCount = 30;
 
 // Indices into kRouletteSeNames, and so into m_rouletteSe / m_rouletteSeInst.
 constexpr int kRouletteSeOpen = 0;     // se11_roulapp
 constexpr int kRouletteSeStop = 2;     // se13_roulstop
 constexpr int kRouletteSeMove = 3;     // se14_move
 constexpr int kRouletteSeGoal = 12;    // se22_goal
+constexpr int kRouletteSeGacha = 13;   // se23_gacha
 constexpr int kRouletteSeItemGet = 11; // se21_itemget
+constexpr int kRouletteSeSkill = 4;    // se15_skill
 constexpr int kRouletteSeTrap = 5;     // se16_wana
 constexpr int kRouletteSeWarp = 6;     // se17_warp
 constexpr int kRouletteSeWarpIn = 7;   // se17b_warp
@@ -405,8 +559,58 @@ constexpr int kMaxTreasurePoint = 9999;
 // refreshMapScroll applies (pool 0x9ac24).
 constexpr float kBoardHalfTileBias = 52.0f;
 
-// Defined below with the other sugoroku draw helpers; the piece-award states run before it.
+// Layout slots are stored unscaled and converted to pixels at the point of use.
+static int acScaleToPixels(int v, float scale) {
+    return static_cast<int>(static_cast<float>(v) * scale);
+}
+
+// Every chara-select and collection hit rect is four stored ints scaled by m_screenScale and
+// handed to pointInRect (0x9b3ec, 0x9e24e, 0x9eb0a, 0x9f0c2 and 0x9f6c4 all reach 0x2d974 that
+// way).
+static bool acTapInScaledRect(const neTouchPoint *touch, float scale, int x, int y, int w, int h) {
+    return neGraphics::pointInRect(touch->x,
+                                   touch->y,
+                                   acScaleToPixels(x, scale),
+                                   acScaleToPixels(y, scale),
+                                   acScaleToPixels(w, scale),
+                                   acScaleToPixels(h, scale));
+}
+
+// Defined below with the other sugoroku helpers; the states run before it.
 static bool sugorokuPieceUnlocked(const uint32_t *grid, int charId, int bitIndex);
+
+namespace {
+// Defined further down inside this same anonymous namespace, with the other cross-file helpers.
+// The declaration has to sit in the namespace too: at file scope it would be a second, externally
+// linked entity and every call would then be ambiguous between the two.
+short findTreasureMapIndexById(int id);
+} // namespace
+
+// The collection menu's three hit rects, in unscaled units. The two board buttons share an x,
+// width and height and differ only in y, which the tall-phone layout shifts down; the back rect
+// is anchored at the screen origin (0x9df9e supplies both its x and y from an all-zero NEON
+// pair). Ghidra: 0x9bc08 picks the layout by comparing the overlay height against 0x470.
+constexpr int kTallPhoneOverlayHeight = 1136;
+constexpr float kCollectionButtonX = 149.0f;
+constexpr float kCollectionButtonW = 360.0f;
+constexpr float kCollectionButtonH = 100.0f;
+constexpr float kCollectionMusicY[2] = {360.0f, 451.0f};
+constexpr float kCollectionWallY[2] = {524.0f, 613.0f};
+constexpr float kCollectionBackW = 140.0f;
+constexpr float kCollectionBackH = 80.0f;
+
+// A collection-board piece panel's hit box is a fixed square (pool 0x9be24).
+constexpr float kPiecePanelHitSize = 196.0f;
+// The BT_WALL_SAVE button, whose y is measured up from the bottom of the overlay.
+constexpr int kWallSaveButtonX = 147;
+constexpr int kWallSaveButtonW = 360;
+constexpr int kWallSaveButtonH = 112;
+constexpr int kWallSaveButtonBottomOffset = 175;
+
+// The wallpaper asset height each display uses.
+constexpr int kWallpaperHeightPad = 2048;
+constexpr int kWallpaperHeightPhone = 960;
+constexpr int kWallpaperHeightPhoneTall = 1136;
 
 // Maps a sugoroku main-map id (0..8) to its touch-sound bit index. Ghidra: FUN_000a218c. The tree
 // already carries this as a file-local static in UserSettingData.mm and
@@ -793,6 +997,1104 @@ void AcMainTask::sugorokuArriveSubMapFlag() {
     parkLayerOverToken(flagLayer); // 0x9ec70..0x9ecd6
     m_squareAnimActive = true;     // 0x9ecde
     m_rankBadgeType = 1;           // 0x9ece2
+}
+
+// Commit every piece the reveal just showed into its TreasureData record. In each three-slot
+// table word bit b is "collected" and bit b + 8 is "already revealed", so only a collected piece
+// whose revealed bit is still clear is written back. The board-encoded id is built as page * 10 +
+// row and split again for the fetch, matching the m_subMapId convention. Both callers set the
+// reload flag before the nil test, not after (0x9c056 and 0x9d446).
+// Ghidra: 0x9bea0..0x9c186 (music) and 0x9d386..0x9d558 (wallpaper).
+bool AcMainTask::commitRevealedPieces(const uint32_t *table, int page, bool wallpaper) {
+    bool changed = false;
+    for (int i = 0; i < 9; i++) {
+        const int row = i / 3;
+        const int col = i % 3;
+        const uint32_t bits = table[page * 3 + row];
+        if ((bits & (1u << col)) == 0 || (bits & (1u << (col + 8))) != 0) {
+            continue;
+        }
+        NSManagedObjectContext *ctx = [AppDelegate appDelegate].managedObjectContext;
+        [ctx reset];
+        TreasureData *record = [TreasureData getTreasureData:static_cast<short>(page)
+                                                    subMapId:static_cast<short>(row)
+                                      inManagedObjectContext:ctx];
+        changed = true;
+        if (!record) {
+            continue;
+        }
+        const int seen = 1 << (col + 8);
+        if (wallpaper) {
+            record.wallPaperPiece = @([record.wallPaperPiece intValue] | seen);
+        } else {
+            record.musicPiece = @([record.musicPiece intValue] | seen);
+        }
+        NSError *saveErr = nil;
+        if (![ctx save:&saveErr]) {
+            // The same walk sugorokuSaveTreasureProgress makes: the shipped build's enumeration
+            // body is empty (0x9c116..0x9c14c and 0x9d4b4..0x9d53c).
+            NSArray *detailedErrors = saveErr.userInfo[NSDetailedErrorsKey];
+            if (detailedErrors.count != 0) {
+                for (__unused NSError *detail in detailedErrors) {
+                }
+            }
+        }
+    }
+    return changed;
+}
+
+// case 0x3b — the music-piece collection board is up and interactive: tap a panel to open its
+// reveal, or tap the close button to leave. Ghidra: 0x9bcde.
+void AcMainTask::stateMusicPieceView() {
+    if (!m_frameTapped) {
+        return; // 0x9bcde
+    }
+    const int tapX = m_frameTapTouch->x;
+    const int tapY = m_frameTapTouch->y;
+    const float scale = m_screenScale;
+    // The hit box is a fixed square (0x9bcf0, pool 0x9be24 == 196.0f).
+    const int panelSize = static_cast<int>(kPiecePanelHitSize * scale);
+
+    for (int i = 0; i < 9; i++) { // 0x9bcf8..0x9bd48
+        if (!neGraphics::pointInRect(tapX,
+                                     tapY,
+                                     static_cast<int>(m_musicAnchor[i].x * scale),
+                                     static_cast<int>(m_musicAnchor[i].y * scale),
+                                     panelSize,
+                                     panelSize)) {
+            continue;
+        }
+        neEngine::playSystemSe(1); // 0x9d0e6
+        AepLyrCtrl *reveal = m_rouletteLayers[kRouletteLayerMusicPieceOpen].get();
+        reveal->playSpeed() = 1.0f;                 // 0x9d0ee
+        reveal->playOnce();                         // 0x9d0f6
+        m_selMusicPanel = i;                        // 0x9d0fc
+        m_pieceRevealFrame = 0;                     // 0x9d100
+        m_state = kAcMainStateMusicPieceRevealWait; // 0x9d104
+        return;
+    }
+
+    // The close button (0x9bd54): m_dlgLayoutB[4..7] are its x, y, w and h.
+    if (!acTapInScaledRect(m_frameTapTouch,
+                           scale,
+                           m_dlgLayoutB[4],
+                           m_dlgLayoutB[5],
+                           m_dlgLayoutB[6],
+                           m_dlgLayoutB[7])) {
+        return; // 0x9bdcc
+    }
+    neEngine::playSystemSe(2);             // 0x9bde4
+    if (m_padDisplay) {                    // 0x9bde8
+        m_state = kAcMainStateBoardReveal; // 0x9bdf2
+    } else {
+        m_panelLayers[kPanelCollectionOpen]->pause(); // 0x9ed7c
+        m_state = kAcMainStateCollectionMenu;         // 0x9ed80
+    }
+    AepLyrCtrl *board = m_panelLayers[kPanelMusicPieceBoard].get(); // 0x9ed86
+    board->playSpeed() = -1.0f;                                     // 0x9eda4
+    board->stop(1);                                                 // 0x9edb4
+}
+
+// case 0x3d — the music-piece reveal is on screen: advance the two frame counters, and on a tap
+// persist every newly revealed piece before returning to the board. Ghidra: 0x9be28.
+void AcMainTask::stateMusicPieceReveal() {
+    if (m_pieceRevealFrame < m_musicPeaceFrames - 1) { // 0x9be28
+        ++m_pieceRevealFrame;
+    }
+    if (m_musicResultFrame < m_skillBoard[2].frameCount - 1) { // 0x9be3c
+        ++m_musicResultFrame;
+    }
+    if (!m_frameTapped) {
+        return; // 0x9be50
+    }
+
+    neEngine::playSystemSe(2); // 0x9be62 / 0x9be76
+
+    if (AepLyrCtrl *select = m_panelLayers[kPanelCollectionOpen].get()) { // 0x9be7a
+        select->pause();                                                  // 0x9be86
+    }
+
+    AepLyrCtrl *reveal = m_rouletteLayers[kRouletteLayerMusicPieceOpen].get(); // 0x9be8a
+    reveal->playSpeed() = -1.0f;                                               // 0x9be94
+    reveal->stop(1);                                                           // 0x9be9c
+
+    if (commitRevealedPieces(
+            m_musicPieceTableDup, findTreasureMapIndexById(m_selMusicPanel), false)) {
+        loadTreasureProgress(); // 0x9c180
+    }
+    m_state = kAcMainStateMusicPieceView; // 0x9c184
+}
+
+// case 0x40 — the wallpaper-piece collection board is up and interactive: tap a panel to open its
+// reveal, loading that page's board artwork and recomputing the page-complete flag, or tap the
+// close button to leave. Ghidra: 0x9c1e6.
+void AcMainTask::stateWallBoardIdle() {
+    if (!m_frameTapped) {
+        return; // 0x9c1e6
+    }
+    const int tapX = m_frameTapTouch->x;
+    const int tapY = m_frameTapTouch->y;
+    const float scale = m_screenScale;
+    const int panelSize = static_cast<int>(scale * kPiecePanelHitSize);
+
+    for (int i = 0; i < 9; i++) { // 0x9c1ee..0x9c250
+        if (!neGraphics::pointInRect(
+                tapX,
+                tapY,
+                static_cast<int>(static_cast<float>(m_wallAnchor[i].x) * scale),
+                static_cast<int>(static_cast<float>(m_wallAnchor[i].y) * scale),
+                panelSize,
+                panelSize)) {
+            continue;
+        }
+        neEngine::playSystemSe(1); // 0x9d10a
+        AepLyrCtrl *reveal = m_rouletteLayers[kRouletteLayerWallPieceOpen].get();
+        reveal->playSpeed() = 1.0f;
+        reveal->playOnce();
+        m_rouletteMapId = i;
+        m_pieceRevealFrame = 0;
+
+        // The reveal draws this page's whole board behind the nine piece layers (the
+        // kBoardWallReveal draw branch reads the same slot). Ghidra: 0x9d144..0x9d200.
+        const int mapIdx = findTreasureMapIndexById(i);
+        m_reserveTex[0] = std::make_unique<neTextureForiOS>();
+        NSString *file = [NSString stringWithFormat:@"sugo_wall%02d_960.png", mapIdx];
+#ifdef ENABLE_PATCHES
+        NSString *path = [AppDelegate appAssetsPath:file];
+#else
+        NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
+#endif
+        m_reserveTex[0]->load([path UTF8String]);
+
+        // The page counts as complete only while all nine of its piece bits are set: the flag
+        // goes up first and the first clear bit drops it and stops the scan.
+        // Ghidra: 0x9d204..0x9d242 with the 0x9e008 tail.
+        m_wallpaperComplete = true;
+        for (int j = 0; j < 9; j++) {
+            if ((m_wallPieceTableDup[mapIdx * 3 + j / 3] & (1u << (j % 3))) == 0) {
+                m_wallpaperComplete = false;
+                break;
+            }
+        }
+        m_state = kAcMainStateWallPieceOpen; // 0x9e00e movs 0x42
+        return;
+    }
+
+    // The close button: m_dlgLayoutB[8..11] as x, y, w and h. Ghidra: 0x9c25c..0x9c2d4.
+    if (!acTapInScaledRect(m_frameTapTouch,
+                           scale,
+                           m_dlgLayoutB[8],
+                           m_dlgLayoutB[9],
+                           m_dlgLayoutB[10],
+                           m_dlgLayoutB[11])) {
+        return;
+    }
+    neEngine::playSystemSe(2); // 0x9c2da / 0x9c2ec
+    if (m_padDisplay) {
+        m_fadeDir = 0;                        // 0x9c2fc
+        m_state = kAcMainStateWallBoardClose; // 0x9c300
+    } else {
+        m_panelLayers[kPanelCollectionOpen]->pause(); // 0x9ed8c
+        m_state = kAcMainStateCollectionMenu;         // 0x9ed9a
+    }
+    AepLyrCtrl *board = m_panelLayers[kPanelWallPieceBoard].get(); // 0x9eda4
+    board->playSpeed() = -1.0f;
+    board->stop(1);
+}
+
+// case 0x42 — WALL_PEACE_OPEN plays the wallpaper open animation, fading the save button in on
+// the layer's own progress; the full-size view takes over when the layer settles.
+// Ghidra: 0x9c342.
+void AcMainTask::stateWallPieceOpen() {
+    AepLyrCtrl *lyr = m_rouletteLayers[kRouletteLayerWallPieceOpen].get();
+    if (!lyr->isAnimating()) {
+        m_rouletteSeInst[kRouletteSePiece] = -1; // 0x9c354 str -1 -> +0x498
+        m_state = kAcMainStateWallPieceView;
+    }
+    if (!m_wallpaperComplete) {
+        return;
+    }
+    // 0x9c37c truncates the play head before 0x9c38a multiplies by 100, so the division at
+    // 0x9c392 sees int(curFrame) * 100, not int(curFrame * 100).
+    const int progress = (static_cast<int>(lyr->curFrame()) * 100) / (lyr->frameCount() - 1);
+    AepDrawSpriteHandle(m_aep,
+                        m_boardFrame[kBoardFrameWallSave],
+                        kWallSaveButtonX,
+                        m_overlayH - kWallSaveButtonBottomOffset,
+                        100,
+                        100,
+                        0,
+                        0,
+                        0,
+                        progress,
+                        100 - progress,
+                        8,
+                        0xffffff,
+                        nullptr,
+                        0xa,
+                        1);
+}
+
+// case 0x43 — the full-size wallpaper view: step the two reveal counters, and on a tap either arm
+// the camera-roll save (inside the save button, once the map's nine pieces are owned) or close
+// back to the piece board, persisting any newly-revealed pieces. Ghidra: 0x9c3d6.
+void AcMainTask::stateWallPieceView() {
+    if (m_pieceRevealFrame < m_wallPeaceFrames - 1) {
+        ++m_pieceRevealFrame;
+    }
+    if (m_wallResultFrame < m_skillBoard[3].frameCount - 1) { // WALL_PEACE_LOCK1
+        ++m_wallResultFrame;
+    }
+
+    if (m_frameTapped) {
+        const float scale = m_screenScale;
+        const int buttonY = m_overlayH - kWallSaveButtonBottomOffset;
+        if (acTapInScaledRect(m_frameTapTouch,
+                              scale,
+                              kWallSaveButtonX,
+                              buttonY,
+                              kWallSaveButtonW,
+                              kWallSaveButtonH)) {
+            // 0x9c46c: an incomplete map ignores the button, since it is not drawn.
+            if (m_wallpaperComplete) {
+                neEngine::playSystemSe(1);
+                m_state = kAcMainStateWallSaveBegin;
+            }
+        } else {
+            neEngine::playSystemSe(2); // 0x9d246
+            // 0x9d262: a pad never builds panels 4 and 5, so this is a null guard.
+            if (!m_padDisplay) {
+                m_panelLayers[kPanelCollectionOpen]->pause();
+            }
+            AepLyrCtrl *open = m_rouletteLayers[kRouletteLayerWallPieceOpen].get();
+            open->playSpeed() = -1.0f; // 0x9d276
+            open->stop(1);             // 0x9d288
+
+            if (commitRevealedPieces(
+                    m_wallPieceTableDup, findTreasureMapIndexById(m_rouletteMapId), true)) {
+                loadTreasureProgress(); // 0x9d560
+            }
+            m_state = kAcMainStateWallBoardIdle;
+        }
+    }
+
+    // 0x9d57a: the BT_WALL_SAVE button, drawn only once the map is complete.
+    if (m_wallpaperComplete) {
+        drawAepFrame(m_aep,
+                     m_boardFrame[kBoardFrameWallSave],
+                     kWallSaveButtonX,
+                     m_overlayH - kWallSaveButtonBottomOffset,
+                     0x20,
+                     10);
+    }
+}
+
+// case 0x38 — the collection menu's tap routing: three hit rects sending the player to the
+// music-piece board, the wallpaper board, or back out. Ghidra: 0x9bbec.
+void AcMainTask::stateCollectionMenu() {
+    if (!m_frameTapped) {
+        return; // 0x9bbee / 0x9bbf0
+    }
+    const int tapX = m_frameTapTouch->x;
+    const int tapY = m_frameTapTouch->y;
+    const float scale = m_screenScale;
+    const int layout = (m_overlayH == kTallPhoneOverlayHeight) ? 1 : 0; // 0x9bc08 cmp #0x470
+    const int buttonX = static_cast<int>(kCollectionButtonX * scale);
+    const int buttonW = static_cast<int>(kCollectionButtonW * scale);
+    const int buttonH = static_cast<int>(kCollectionButtonH * scale);
+
+    if (neGraphics::pointInRect(tapX,
+                                tapY,
+                                buttonX,
+                                static_cast<int>(kCollectionMusicY[layout] * scale),
+                                buttonW,
+                                buttonH)) {
+        neEngine::playSystemSe(1);            // 0x9bc82
+        m_state = kAcMainStateMusicPieceOpen; // 0x9bc86 movs 0x39
+        return;
+    }
+
+    if (neGraphics::pointInRect(tapX,
+                                tapY,
+                                buttonX,
+                                static_cast<int>(kCollectionWallY[layout] * scale),
+                                buttonW,
+                                buttonH)) {
+        neEngine::playSystemSe(1);           // 0x9d0c4
+        m_state = kAcMainStateWallBoardOpen; // 0x9d0c8 movs 0x3e
+        return;
+    }
+
+    if (neGraphics::pointInRect(tapX,
+                                tapY,
+                                0,
+                                0,
+                                static_cast<int>(kCollectionBackW * scale),
+                                static_cast<int>(kCollectionBackH * scale))) {
+        neEngine::playSystemSe(2);             // 0x9e000
+        m_state = kAcMainStateCollectionClose; // 0x9e004 movs 0x47
+    }
+}
+
+// case 0x3e — open the wallpaper-piece collection board: play the WALL_PEACE_S panel in and load
+// page 0's nine nail textures. On a pad the transition dim is armed as well. Ghidra: 0x9c18a.
+void AcMainTask::stateWallBoardOpen() {
+    if (m_padDisplay) {
+        m_fadeDir = 1; // 0x9c19a / 0x9c19c
+    }
+    AepLyrCtrl *panel = m_panelLayers[kPanelWallPieceBoard].get(); // 0x9c1a0
+    panel->playSpeed() = 1.0f;                                     // 0x9c1a4
+    panel->playOnce();                                             // 0x9c1a8
+    sugorokuLoadWallTextures(0);                                   // 0x9c1b2
+    m_state = kAcMainStateWallBoardOpenWait;                       // 0x9c1b6 movs 0x3f
+}
+
+// case 0x3c — hold until MUSIC_PEACE_OPEN has finished playing in, then free the reveal SE slot
+// and show the piece list. Ghidra: 0x9bdf8.
+void AcMainTask::stateMusicPieceRevealWait() {
+    if (m_rouletteLayers[kRouletteLayerMusicPieceOpen]->isAnimating()) {
+        return; // 0x9be02
+    }
+    m_rouletteSeInst[kRouletteSePiece] = -1; // 0x9be0c str -1 -> +0x498
+    m_state = kAcMainStateMusicPieceReveal;
+}
+
+// case 0x3f — hold until the WALL_PEACE_S panel has slid in, then park the collection-select
+// panel and hand over to the interactive board. Ghidra: 0x9c1bc.
+void AcMainTask::stateWallBoardOpenWait() {
+    if (m_panelLayers[kPanelWallPieceBoard]->isAnimating()) {
+        return;
+    }
+    if (AepLyrCtrl *select = m_panelLayers[kPanelCollectionOpen].get()) {
+        select->stopPlay();
+    }
+    m_state = kAcMainStateWallBoardIdle;
+}
+
+// case 0x41 — the pad-only close of the wall-piece board: wait for the panel to finish rewinding,
+// then drop the nine wall-nail textures. Ghidra: 0x9c306.
+void AcMainTask::stateWallBoardClose() {
+    if (m_panelLayers[kPanelWallPieceBoard]->isAnimating()) {
+        return;
+    }
+    for (auto &slot : m_wallNailTex) {
+        slot.reset();
+    }
+    m_state = kAcMainStateBoardReveal;
+}
+
+// case 0x44 — build the wallpaper file name from the map's nail index and the device's wallpaper
+// height, and hand it to the asynchronous camera-roll save. Ghidra: 0x9c498.
+void AcMainTask::stateWallSaveBegin() {
+    const short mapIndex = findTreasureMapIndexById(m_rouletteMapId);
+
+    int height = kWallpaperHeightPad;
+    if (!m_padDisplay) {
+        height = ([[AppDelegate appDelegate] displayType] == DisplayTypePhoneRetinaTall) ?
+                     kWallpaperHeightPhoneTall :
+                     kWallpaperHeightPhone;
+    }
+
+    NSString *name =
+        [NSString stringWithFormat:@"sugo_wall%02d_%d.png", static_cast<int>(mapIndex), height];
+    MainViewController *root =
+        static_cast<MainViewController *>(neSceneManager::rootViewController());
+    [root SaveToCameraRoll:name];
+    m_state = kAcMainStateWallSaveWait;
+}
+
+// case 0x45 — poll the asynchronous save. A failure raises the permission alert and returns to
+// the wallpaper view; a success plays the confirmation once. Ghidra: 0x9c4b8.
+void AcMainTask::stateWallSaveWait() {
+    MainViewController *root =
+        static_cast<MainViewController *>(neSceneManager::rootViewController());
+    if (root.cameraRollSaving) {
+        return;
+    }
+
+    if (root.cameraRollError) {
+        CommonAlertView *alert = [[CommonAlertView alloc]
+                initWithTitle:@"CameraRoll"
+                      message:@"保存に失敗しました。\n写真へのアクセス許可を確認して下さい。"
+                     delegate:nil
+            cancelButtonTitle:nil
+            otherButtonTitles:@"OK"];
+        [alert show];
+        m_state = kAcMainStateWallPieceView;
+        return;
+    }
+
+    AepLyrCtrl *done = m_rouletteLayers[kRouletteLayerWallSaveCom].get();
+    done->playSpeed() = 1.0f;
+    done->playOnce();
+    m_state = kAcMainStateWallSaveDone;
+}
+
+// case 0x46 — the "saved" confirmation panel. A tap once it has settled plays the decide SE, runs
+// the layer backwards and returns to the wallpaper view. Ghidra: 0x9c58e.
+void AcMainTask::stateWallSaveDone() {
+    if (!m_frameTapped) {
+        return;
+    }
+    AepLyrCtrl *done = m_rouletteLayers[kRouletteLayerWallSaveCom].get();
+    if (done->isAnimating()) {
+        return;
+    }
+    neEngine::playSystemSe(1);
+    done->playSpeed() = -1.0f;
+    done->stop(1);
+    m_state = kAcMainStateWallPieceView;
+}
+
+// case 0x47 — leave the wallpaper collection screen: rewind the open panel, arm the out panel,
+// make the board visible again and drop the nail textures. Ghidra: 0x9c5dc.
+void AcMainTask::stateCollectionClose() {
+    m_panelLayers[kPanelCollectionOpen]->stopPlay(); // 0x9c5e8
+    m_panelLayers[kPanelCollectionOut]->stop(1);     // 0x9c5f8
+    m_bgmActive = true;                              // 0x9c600
+    for (auto &slot : m_wallNailTex) {               // 0x9c608, the nine-slot loop over +0x1c8
+        slot.reset();
+    }
+    m_state = kAcMainStateCollectionCloseWait; // 0x9c622
+}
+
+// case 0x48 — hold until the out panel finishes, then hand back to the board. Ghidra: 0x9c628.
+void AcMainTask::stateCollectionCloseWait() {
+    if (!m_panelLayers[kPanelCollectionOut]->isAnimating()) {
+        m_state = kAcMainStateBoardReveal;
+    }
+}
+
+// case 0x49 — start the standard 30-frame fade-out that precedes a full scene rebuild.
+// Ghidra: 0x9c640.
+void AcMainTask::stateMapReloadBegin() {
+    AepManager::shared().setAepTransitionMode(2);
+    m_state = kAcMainStateMapReloadWait;
+}
+
+// case 0x4a — once the fade has finished and the decide SE has gone quiet, tear the sugoroku
+// scene down, rebuild it and restart at the fade-in state. Ghidra: 0x9c656.
+void AcMainTask::stateMapReloadWait() {
+    if (!AepManager::shared().isTransitionDone()) {
+        return;
+    }
+    if (neEngine::isSePlaying(1)) {
+        return; // the decide SE is still sounding
+    }
+    sugorokuTaskDispose();
+    setupScene();
+    m_bgmActive = false;
+    m_state = kAcMainStateFadeIn;
+}
+
+// Load sugo_chara%03d.png for a character into a texture slot. Every site builds the same name
+// (0x9ba60..0x9bab4 and the case-0x2f copy).
+void AcMainTask::loadCharaBoardTexture(std::unique_ptr<neTextureForiOS> &slot, int charaId) {
+    slot = std::make_unique<neTextureForiOS>();
+    NSString *file = [NSString stringWithFormat:@"sugo_chara%03d.png", charaId];
+#ifdef ENABLE_PATCHES
+    NSString *path = [AppDelegate appAssetsPath:file];
+#else
+    NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
+#endif
+    slot->load([path UTF8String]);
+}
+
+// case 0x2f — the player picked a character: load its board portrait into the scratch slot and
+// open the confirmation panel. Ghidra: 0x9b812.
+void AcMainTask::stateCharaSelectApply() {
+    m_reserveTex[2].reset();
+    loadCharaBoardTexture(m_reserveTex[2], m_skillCharaId);
+    m_rouletteLayers[kRouletteLayerCharaOpen]->playOnce();
+    m_state = kAcMainStateCharaConfirm;
+}
+
+// case 0x30 — the character-change confirmation. A tap inside the confirm rect commits the pick;
+// any other tap is a cancel. Ghidra: 0x9b8e4.
+void AcMainTask::stateCharaConfirm() {
+    if (!m_frameTapped) {
+        return; // 0x9b8e4
+    }
+    if (m_rouletteLayers[kRouletteLayerCharaOpen]->isAnimating()) {
+        return; // 0x9b8ec, still opening
+    }
+
+    // m_dlgLayoutB[12..15] are the confirm button's x, y, w and h. 0x9b900..0x9b972 reads
+    // +0x9e8/+0x9ec/+0x9f0/+0x9f4 with vldr.32 then vcvt.f32.s32, so those slots hold ints.
+    if (!acTapInScaledRect(m_frameTapTouch,
+                           m_screenScale,
+                           m_dlgLayoutB[12],
+                           m_dlgLayoutB[13],
+                           m_dlgLayoutB[14],
+                           m_dlgLayoutB[15])) {
+        neEngine::playSystemSe(2); // 0x9df6a / 0x9df7c
+        m_state = kAcMainStateCharaConfirmCancel;
+        return;
+    }
+
+    [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeSkill]]; // 0x9b998
+    [UserSettingData saveCharaId:m_skillCharaId];                                        // 0x9b9ba
+    m_charaId = m_skillCharaId;                                                          // 0x9b9be
+
+    // Re-resolve the active skill record for the new character. Ghidra: the gCharaManager guard
+    // at 0x9b9c8, availableInfoForCharaId at 0x9b9dc and GetSkillDataStruct at 0x9b9f8.
+    CharaInfo *info = gCharaManager.availableInfoForCharaId(m_skillCharaId);
+    m_skillInfo = (__bridge void *)info;
+    m_skillData = GetSkillDataStruct(static_cast<int>(info.skillId));
+
+    m_charaTex.reset();                                // 0x9ba00
+    loadCharaBoardTexture(m_charaTex, m_skillCharaId); // 0x9ba1a / 0x9ba60..0x9bab4
+    m_state = kAcMainStateCharaChangeClose;            // 0x9bab8 movs 0x34
+}
+
+// case 0x36 — play the collection-select menu's opening overlay once. Ghidra: 0x9bbae.
+void AcMainTask::stateCollectionOpen() {
+    m_panelLayers[kPanelCollectionOpen]->playOnce(); // 0x9bbb8
+    m_state = kAcMainStateCollectionOpenWait;
+}
+
+// case 0x37 — wait for that overlay, then hide the board behind it on phones. Ghidra: 0x9bbc2.
+void AcMainTask::stateCollectionOpenWait() {
+    if (m_panelLayers[kPanelCollectionOpen]->isAnimating()) {
+        return; // 0x9bbcc
+    }
+    if (!m_padDisplay) {
+        m_bgmActive = false; // 0x9bbd6..0x9bbe0
+    }
+    m_state = kAcMainStateCollectionMenu;
+}
+
+// case 0x39 — open the music-piece collection board, arming the transition dim on a pad.
+// Ghidra: 0x9bc8c.
+void AcMainTask::stateMusicPieceOpen() {
+    if (m_padDisplay) {
+        m_fadeDir = 1; // 0x9bc96..0x9bc9a
+    }
+    AepLyrCtrl *board = m_panelLayers[kPanelMusicPieceBoard].get();
+    board->playSpeed() = 1.0f; // 0x9bca2
+    board->playOnce();         // 0x9bcaa
+    m_state = kAcMainStateMusicPieceOpenWait;
+}
+
+// case 0x3a — wait for the board to finish opening, park the collection-menu layer and hand over
+// to the board's own state. Ghidra: 0x9bcb4.
+void AcMainTask::stateMusicPieceOpenWait() {
+    if (m_panelLayers[kPanelMusicPieceBoard]->isAnimating()) {
+        return; // 0x9bcbe / 0x9bcc4
+    }
+    // Panels 4 and 5 are never built on a pad, so this really can be null.
+    if (m_panelLayers[kPanelCollectionOpen]) {           // 0x9bcce
+        m_panelLayers[kPanelCollectionOpen]->stopPlay(); // 0x9bcd8
+    }
+    m_state = kAcMainStateMusicPieceView; // 0x9c184 movs 0x3b
+}
+
+// case 0x2c — spend five tickets on the character lottery: arm the overlay, fire the play-log
+// beacon, draw the awarded character, bank the spend and load the award portrait.
+// Ghidra: 0x9b48e.
+void AcMainTask::stateCharaGachaRoll() {
+    if (countAvailableCharacters((__bridge NSArray *)m_gotCharaArray) != 0) {
+        m_state = kAcMainStateCharaSelectIdle; // 0x9b49e bne 0x9bad8
+        return;
+    }
+
+    AepLyrCtrl *gacha = m_rouletteLayers[kRouletteLayerGatsha].get();
+    gacha->frameCount() = kGachaRollFrames; // 0x9b4aa str 0x98 -> +0x3c
+    gacha->playOnce();
+
+    // Fire-and-forget play-log beacon (0x9b4b2..0x9b5dc): a delegate-less connection the
+    // original started and never read back.
+    NSMutableURLRequest *request =
+        [[NSMutableURLRequest alloc] initWithURL:[StoreUtil logCharaKujiURL]
+                                     cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
+                                 timeoutInterval:15.0];
+    [request setValue:[AppDelegate appDelegate].userAgent forHTTPHeaderField:@"User-Agent"];
+    [request setValue:[StoreUtil targetStore] forHTTPHeaderField:@"Accept-Language"];
+    static_cast<void>([[NSURLConnection alloc] initWithRequest:request delegate:nil]);
+
+    // Award pick (0x9b5e2..0x9b662), with the rarity-weighted fallback at 0x9cecc..0x9e0c2.
+    NSArray *unlocked = gCharaManager.collectUnlockedCharaIds();
+    __unsafe_unretained NSArray *infos = (__bridge NSArray *)m_availableInfos;
+    __unsafe_unretained NSArray *owned = (__bridge NSArray *)m_gotCharaArray;
+    if (unlocked && unlocked.count != 0) {
+        const int pick = m_rng.getRandRangeInt(static_cast<int>(unlocked.count));
+        m_wonCharaId = [unlocked[static_cast<NSUInteger>(pick)] shortValue];
+    } else {
+        int weightTotal = 0;
+        for (CharaInfo *info in infos) {
+            const auto bit = static_cast<unsigned>(static_cast<short>(info.charaId));
+            if (!RhTestBitInNumberArray(owned, bit)) {
+                weightTotal += info.rarity;
+            }
+        }
+        int roll = m_rng.getRandRangeInt(weightTotal);
+        for (CharaInfo *info in infos) {
+            const auto bit = static_cast<unsigned>(static_cast<short>(info.charaId));
+            if (RhTestBitInNumberArray(owned, bit)) {
+                continue;
+            }
+            const int weight = info.rarity;
+            if (roll < weight) { // 0x9e0a4 cmp / blt 0x9e452
+                m_wonCharaId = static_cast<int16_t>(info.charaId);
+                break;
+            }
+            roll -= weight;
+        }
+    }
+
+    // Award tail (0x9e456): the tickets are spent but never taken below zero, the character is
+    // banked and its board portrait loads for the reveal.
+    m_charaTicket = static_cast<int16_t>(
+        m_charaTicket - kCharaLotteryCost > 0 ? m_charaTicket - kCharaLotteryCost : 0);
+    [UserSettingData saveCharaTicket:m_charaTicket];
+    [UserSettingData saveGotCharaArray:m_wonCharaId];
+    loadCharaBoardTexture(m_reserveTex[1], m_wonCharaId);
+    static_cast<void>([[AudioManager sharedManager] playSe:nil
+                                                resourceId:m_rouletteSe[kRouletteSeGacha]]);
+    m_revealTexLoaded = false;
+    m_state = kAcMainStateCharaGachaReveal;
+}
+
+// case 0x2d — hold the gacha overlay. Once its play head passes the reveal frame the awarded
+// character's grid portrait swaps in, but only while its page is the one on screen; the next tap
+// extends the overlay into its closing run. Ghidra: 0x9b666.
+void AcMainTask::stateCharaGachaReveal() {
+    AepLyrCtrl *gacha = m_rouletteLayers[kRouletteLayerGatsha].get();
+    if (!m_revealTexLoaded && static_cast<int>(gacha->curFrame()) >= kGachaRevealFrame) {
+        const int index = charaSelectFindCharaIndex(m_wonCharaId);
+        if (m_charaColRight == index / kCharaCellsPerPage) { // 0x9b6aa
+            auto &slot = m_charaPagePrevTex[index % kCharaCellsPerPage];
+            slot = std::make_unique<neTextureForiOS>();
+            NSString *imageName =
+                [NSString stringWithFormat:@"open_chara%03d.png", static_cast<int>(m_wonCharaId)];
+            NSString *path;
+            if (m_wonCharaId < kBundledCharaCount) { // 0x9b748
+                path = [[NSBundle mainBundle] pathForResource:imageName ofType:nil];
+            } else {
+#ifdef ENABLE_PATCHES
+                path = [AppDelegate appAssetsPath:imageName];
+#else
+                path =
+                    [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:imageName];
+#endif
+            }
+            slot->load([path UTF8String]);
+        }
+        m_revealTexLoaded = true; // 0x9e7fe, reached from both arms
+    }
+
+    // 0x9e80e isAnimating, 0x9e816 the tap flag, 0x9e824 the closing length, 0x9e830 stop(false),
+    // which re-arms the layer as a once-play.
+    if (!gacha->isAnimating() && m_frameTapped) {
+        gacha->frameCount() = kGachaCloseFrames;
+        gacha->stop(0);
+        m_state = kAcMainStateCharaGachaClose;
+    }
+}
+
+// The shared chara-select page-flip commit (0x9e2f8 for the next-page arrow, 0x9ebb2 for the
+// previous one; both join the layer kick at 0x9ce60). The new page loads into the incoming
+// texture slots and the change layer runs in the flip's direction; the handover to the drawn
+// slots happens once that layer reports finished, back in stateCharaSelectIdle.
+void AcMainTask::charaSelectFlipToPage(int page, float playSpeed) {
+    m_charaColLeft = page;
+    charaSelectLoadPageTextures(page);
+    m_rouletteLayers[kRouletteLayerSelectArrow]->reset();
+    m_panelLayers[kPanelCharaSelectOpen]->reset();
+    AepLyrCtrl *change = m_panelLayers[kPanelCharaChange].get();
+    change->playSpeed() = playSpeed;
+    change->playOnce();
+}
+
+// case 0x2b — the character-select hub: settle a committed page flip, then route the frame's tap
+// to the close button, the two page arrows, the lottery button or the 2x3 owned-character grid.
+// Ghidra: 0x9b364, whose tap router the compiler scattered across the function.
+void AcMainTask::stateCharaSelectIdle() {
+    AepLyrCtrl *change = m_panelLayers[kPanelCharaChange].get();
+    if (change->isAnimating()) { // 0x9b36e
+        return;
+    }
+    if (m_rouletteLayers[kRouletteLayerCharaClose]->isAnimating()) { // 0x9b37e
+        return;
+    }
+
+    // A page flip that reached its end commits: the target page becomes the current one and its
+    // textures move into the drawn slots. Ghidra: 0x9b38e reads and clears the +0x5c latch.
+    if (change->takeFinished()) {
+        m_charaColRight = m_charaColLeft;
+        for (int i = 0; i < kCharaCellsPerPage; i++) { // 0x9b3a6..0x9b3ca
+            m_charaPagePrevTex[i] = std::move(m_charaPageCurrTex[i]);
+        }
+        change->reset();                               // 0x9b3d6
+        m_panelLayers[kPanelCharaSelectOpen]->pause(); // 0x9b3e0
+    }
+
+    if (!m_frameTapped) {
+        return; // 0x9b3e4
+    }
+    const neTouchPoint *touch = m_frameTapTouch;
+    const float scale = m_screenScale;
+
+    // Close button (0x9b3ec..0x9b48a).
+    if (acTapInScaledRect(
+            touch, scale, m_dlgLayoutB[0], m_dlgLayoutB[1], m_dlgLayoutB[2], m_dlgLayoutB[3])) {
+        neEngine::playSystemSe(2); // 0x9b484
+        m_state = kAcMainStateCharaSelectClose;
+        return;
+    }
+
+    // Next-page arrow (0x9e24e), live only while another page follows.
+    if (acTapInScaledRect(touch,
+                          scale,
+                          m_dlgLayoutA[4],
+                          m_dlgLayoutA[5] + m_layoutOffsetY,
+                          m_dlgLayoutA[6],
+                          m_dlgLayoutA[7])) {
+        if (m_charaColRight < m_charaRowCount - 1) { // 0x9e2cc..0x9e2d8
+            neEngine::playSystemSe(4);               // 0x9e2f4
+            charaSelectFlipToPage(m_charaColRight + 1, 1.0f);
+        }
+        return;
+    }
+
+    // Previous-page arrow (0x9eb0a).
+    if (acTapInScaledRect(touch,
+                          scale,
+                          m_dlgLayoutA[8],
+                          m_dlgLayoutA[9] + m_layoutOffsetY,
+                          m_dlgLayoutA[10],
+                          m_dlgLayoutA[11])) {
+        if (m_charaColRight >= 1) { // 0x9eb8c..0x9eb92
+            neEngine::playSystemSe(4);
+            charaSelectFlipToPage(m_charaColRight - 1, -1.0f);
+        }
+        return;
+    }
+
+    // Character-lottery button (0x9f0c2). It wants five tickets and at least one character still
+    // left to collect; countAvailableCharacters reports 1 once the collection is complete, and
+    // 0x9f158 takes the accept path only on 0, so anything else just rejects the tap.
+    if (acTapInScaledRect(touch,
+                          scale,
+                          m_dlgLayoutA[0],
+                          m_dlgLayoutA[1] + m_layoutOffsetY,
+                          m_dlgLayoutA[2],
+                          m_dlgLayoutA[3])) {
+        if (m_charaTicket >= kCharaLotteryCost &&
+            countAvailableCharacters((__bridge NSArray *)m_gotCharaArray) == 0) {
+            neEngine::playSystemSe(1); // 0x9f742
+            m_state = kAcMainStateCharaGachaRoll;
+        } else {
+            neEngine::playSystemSe(2); // 0x9f170 -> 0x9eafe
+        }
+        return;
+    }
+
+    // The 2x3 grid of owned characters (0x9f5ec). The pick is cleared first, so a tap that lands
+    // on no cell leaves the panel idle; the binary does it with one 32-bit store spanning +0x5fe
+    // and +0x600 (0x9f61c).
+    m_skillCharaId = -1;
+    m_skillCharaSlot = -1;
+    __unsafe_unretained NSArray *infos = (__bridge NSArray *)m_availableInfos;
+    __unsafe_unretained NSArray *owned = (__bridge NSArray *)m_gotCharaArray;
+    for (int slot = 0; slot < kCharaCellsPerPage; slot++) {
+        const auto index = static_cast<unsigned>(m_charaColRight * kCharaCellsPerPage + slot);
+        if (index >= static_cast<unsigned>([infos count])) { // 0x9f658
+            continue;
+        }
+        CharaInfo *info = infos[index];
+        const int charaId = info.charaId; // 0x9f67c, ahead of the nil guard
+        if (!info) {                      // 0x9f682
+            continue;
+        }
+        if (!RhTestBitInNumberArray(owned, static_cast<unsigned>(static_cast<short>(charaId)))) {
+            continue; // 0x9f698: an unowned cell is dead
+        }
+        // 0x9f6a4 (top row, +0x60c / +0x610) and 0x9f6b2 (bottom row, +0x604 / +0x608 with the
+        // three-cell bias removed).
+        const bool topRow = slot < kCharaCellsPerRow;
+        const int cellBaseX =
+            topRow ? m_charaPanelX : m_skillPanelX - kCharaCellSize * kCharaCellsPerRow;
+        const int cellX = cellBaseX + slot * kCharaCellSize;
+        const int cellY = topRow ? m_charaPanelY : m_skillPanelY;
+        if (acTapInScaledRect(touch, scale, cellX, cellY, kCharaCellSize, kCharaCellSize)) {
+            neEngine::playSystemSe(1);                      // 0x9f93c
+            m_skillCharaSlot = static_cast<int16_t>(slot);  // 0x9f944
+            m_skillCharaId = static_cast<int16_t>(charaId); // 0x9f948
+            break;
+        }
+    }
+    if (m_skillCharaSlot != -1) { // 0x9f950
+        m_state = kAcMainStateCharaSelectApply;
+    }
+}
+
+// case 0x29 — open the character-change panel: seed both page indices from the active character's
+// grid page, load that page's textures, hand them to the drawn slots and start the open sweep.
+// Ghidra: 0x9b2c0.
+void AcMainTask::stateCharaChangeOpen() {
+    // 0x9b2ce charaSelectFindCharaIndex, then the 0x2aaaaaab smmul / add lsr #31 pair at
+    // 0x9b2da..0x9b2de, a signed divide by six.
+    const int page = charaSelectFindCharaIndex(m_charaId) / kCharaCellsPerPage;
+    m_charaColRight = page; // 0x9b2e2
+    m_charaColLeft = page;  // 0x9b2e6
+    if (m_padDisplay) {     // 0x9b2ea
+        m_fadeDir = 1;
+    }
+    charaSelectLoadPageTextures(page); // 0x9b2fe
+
+    // The load fills the current-page slots, but the column draw only reads those while the two
+    // column bases differ, and they were just made equal, so the freshly loaded page has to be
+    // promoted into the previous-page slots. Ghidra: 0x9b302..0x9b32a.
+    for (int i = 0; i < kCharaCellsPerPage; i++) {
+        m_charaPagePrevTex[i] = std::move(m_charaPageCurrTex[i]);
+    }
+
+    m_panelLayers[kPanelCharaSelectOpen]->playOnce(); // 0x9b32c / 0x9b336
+    m_state = kAcMainStateCharaChangeOpenWait;
+}
+
+// case 0x2a — hold until the open sweep settles, then hide the board behind the panel on a phone
+// layout. Ghidra: 0x9b340.
+void AcMainTask::stateCharaChangeOpenWait() {
+    if (m_panelLayers[kPanelCharaSelectOpen]->isAnimating()) { // 0x9b34a
+        return;
+    }
+    if (!m_padDisplay) { // 0x9b354
+        m_bgmActive = false;
+    }
+    m_state = kAcMainStateCharaSelectIdle; // 0x9b362
+}
+
+// case 0x2e — the gacha overlay has closed: drop the award portrait and refresh the owned-
+// character working copy so the grid redraws with the new character. Ghidra: 0x9b78a.
+void AcMainTask::stateCharaGachaClose() {
+    if (m_rouletteLayers[kRouletteLayerGatsha]->isAnimating()) { // 0x9b794
+        return;
+    }
+    m_reserveTex[1].reset(); // 0x9b79e
+    if (m_gotCharaArray) {   // 0x9b7b6
+        static_cast<void>((__bridge_transfer id)m_gotCharaArray);
+        m_gotCharaArray = nullptr;
+    }
+    m_gotCharaArray = (__bridge_retained void *)[[UserSettingData gotCharaArray] mutableCopy];
+    m_state = kAcMainStateCharaSelectIdle; // 0x9b810
+}
+
+// case 0x31 — drop the character-confirm overlay and run its close animation, returning to the
+// character list. Ghidra: 0x9babe.
+void AcMainTask::stateCharaConfirmCancel() {
+    m_rouletteLayers[kRouletteLayerCharaOpen]->reset();  // 0x9bac8
+    m_rouletteLayers[kRouletteLayerCharaClose]->stop(1); // 0x9bad4
+    m_state = kAcMainStateCharaSelectIdle;               // 0x9bad8
+}
+
+// case 0x32 — start the character-select screen's close: park the arrow and open overlays, run
+// the out sweep, clear the dim and re-enable the board draw. Ghidra: 0x9bade.
+void AcMainTask::stateCharaSelectClose() {
+    m_rouletteLayers[kRouletteLayerSelectArrow]->reset(); // 0x9bae8
+    m_panelLayers[kPanelCharaSelectOpen]->reset();        // 0x9baf2
+    m_panelLayers[kPanelCharaSelectOut]->stop(1);         // 0x9bb00
+    m_fadeDir = 0;                                        // 0x9bb06
+    m_bgmActive = true;                                   // 0x9bb0c
+    m_state = kAcMainStateCharaSelectCloseWait;
+}
+
+// case 0x33 — wait for the out sweep, free the page textures and return to the board.
+// Ghidra: 0x9bb14.
+void AcMainTask::stateCharaSelectCloseWait() {
+    if (m_panelLayers[kPanelCharaSelectOut]->isAnimating()) {
+        return; // 0x9bb1e
+    }
+    charaSelectReleaseTextures();      // 0x9bb2c
+    m_state = kAcMainStateBoardReveal; // 0x9bb30
+}
+
+// case 0x34 — after a committed character change, park both open overlays and start the two close
+// sweeps, re-enabling the board draw. Ghidra: 0x9bb34.
+void AcMainTask::stateCharaChangeClose() {
+    m_rouletteLayers[kRouletteLayerCharaOpen]->reset();  // 0x9bb3e
+    m_panelLayers[kPanelCharaSelectOpen]->reset();       // 0x9bb48
+    m_rouletteLayers[kRouletteLayerCharaClose]->stop(1); // 0x9bb56
+    m_panelLayers[kPanelCharaSelectOut]->stop(1);        // 0x9bb62
+    m_bgmActive = true;                                  // 0x9bb66
+    m_state = kAcMainStateCharaChangeCloseWait;
+}
+
+// case 0x35 — wait for the close overlays, free the page textures, park the arrow and return to
+// the board. Ghidra: 0x9bb70.
+void AcMainTask::stateCharaChangeCloseWait() {
+    if (m_panelLayers[kPanelMusicPieceBoard]->isAnimating()) {
+        return; // 0x9bb7a
+    }
+    if (m_panelLayers[kPanelCharaSelectOut]->isAnimating()) {
+        return; // 0x9bb8a
+    }
+    charaSelectReleaseTextures();                         // 0x9bb9c
+    m_rouletteLayers[kRouletteLayerSelectArrow]->reset(); // 0x9bba6
+    m_state = kAcMainStateBoardReveal;                    // 0x9bbaa
+}
+
+// case 0x25 — start the skill effect: arm the overlay's one-shot, anchor it over the player token
+// and play the skill SE. Unlike the warp anchor this one truncates the scroll offset to an int
+// before subtracting it (the 0x9b0c8 / 0x9b0de and 0x9b106 / 0x9b120 vcvt round-trips) and adds
+// the half-tile bias after the conversion (0x9b12e adds r0,#0x34). Ghidra: 0x9b08c.
+void AcMainTask::stateSkillEffect() {
+    AepLyrCtrl *effect = m_rouletteLayers[kRouletteLayerSkillEffect].get();
+    effect->stop(1); // 0x9b094 / 0x9b098
+
+    const int scrollOffX = static_cast<int>(m_scrollX - m_scrollBaseX);
+    const int scrollOffY = static_cast<int>(m_scrollY - m_scrollBaseY);
+    const int screenX = static_cast<int>(m_playerX - static_cast<float>(scrollOffX) +
+                                         static_cast<float>(m_overlayW / 2));
+    const int screenY = static_cast<int>(m_playerY - static_cast<float>(scrollOffY) +
+                                         static_cast<float>(m_overlayH / 2));
+    effect->setPosition(screenX + static_cast<int>(kBoardHalfTileBias), screenY);
+
+    [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeSkill]]; // 0x9b13a
+    m_state = kAcMainStateSkillEffectWait;
+}
+
+// case 0x26 — hold while the skill overlay plays, then apply the roulette result: warps,
+// direction flips, trap-square clears, the treasure-progress bump, or the visitor request.
+// Ghidra: 0x9b154.
+void AcMainTask::stateSkillEffectWait() {
+    if (m_rouletteLayers[kRouletteLayerSkillEffect]->isAnimating()) {
+        return; // 0x9b15e
+    }
+
+    // 0x9b16c: the mode is sign-extended but compared unsigned, so -1 lands here.
+    if (static_cast<unsigned>(m_rouletteMode) > 0x1d) {
+        m_rouletteMode = -1; // 0x9b176
+        m_state = kAcMainStateBoardReveal;
+        return;
+    }
+
+    m_state = kAcMainStateBoardReveal; // 0x9dda8, unless an arm says otherwise
+    switch (m_rouletteMode) {
+    case 7: // 0x9d040: warp back to the board's start square
+        m_rouletteMode = -1;
+        m_targetNode = m_map->startNode(); // 0x9d04c ldr [map,#0x54]
+        m_state = kAcMainStateWarpEffect;
+        break;
+    case 8: { // 0x9f214: warp back to the last junction, or stay put when there is none
+        m_rouletteMode = -1;
+        TreasureTmpData tmp = [UserSettingData treasureTmp];
+        m_targetNode =
+            (tmp.lastBranchNodeId == -1) ? m_curNode : m_map->findArea(tmp.lastBranchNodeId);
+        m_state = kAcMainStateWarpEffect;
+        break;
+    }
+    case 9: // 0x9f266: flip the board travel direction
+        m_rouletteMode = -1;
+        m_boardMoveState = (static_cast<unsigned>(m_boardMoveState) < 2u) ? 2 : 0;
+        break;
+    case 0x11: { // 0x9f282: ask the server for a visitor
+        TreasureTmpData tmp = [UserSettingData treasureTmp];
+        tmp.visitorFetchCount++; // 0x9f2b2
+        [UserSettingData saveTreasureTmp:tmp];
+        MainViewController *root =
+            static_cast<MainViewController *>(neSceneManager::rootViewController());
+        [root InsertCommunicating];
+        [[DownloadMain getInstance] startGetVisitorHttp:m_subMapId type:1];
+        m_rouletteMode = -1; // 0x9f32c, after the request goes out
+        m_state = kAcMainStateVisitorWait;
+        break;
+    }
+    case 0x18: // 0x9f336
+        m_rouletteMode = -1;
+        if (m_boardSquareState[8] >= 1) {
+            m_rankBadgeType = 1;
+        }
+        m_boardSquareState[8] = kBoardSquareIdle;
+        break;
+    case 0x19: // 0x9f35a
+        m_rouletteMode = -1;
+        if (m_boardSquareState[14] >= 1) {
+            m_rankBadgeType = 1;
+        }
+        m_boardSquareState[14] = kBoardSquareIdle;
+        break;
+    case 0x1a: // 0x9f37e
+        m_rouletteMode = -1;
+        if (m_boardSquareState[kWarpGateSquareSlot] >= 1) {
+            m_rankBadgeType = 1;
+        }
+        m_boardSquareState[kWarpGateSquareSlot] = kBoardSquareIdle;
+        break;
+    case 0x1b: // 0x9f3a2: ldrsb, so a kBoardSquareEventPending marker does not count
+        m_rouletteMode = -1;
+        if (m_boardSquareState[0] >= 1 || m_boardSquareState[1] >= 1) {
+            m_rankBadgeType = 1;
+        }
+        m_boardSquareState[0] = kBoardSquareIdle;
+        m_boardSquareState[1] = kBoardSquareIdle;
+        break;
+    case 0x1c: // 0x9f3d2: ldrb, so a kBoardSquareEventPending marker does count
+        m_rouletteMode = -1;
+        if (m_boardSquareState[kBoardSquareGateEven] != 0 ||
+            m_boardSquareState[kBoardSquareGateOdd] != 0) {
+            m_rankBadgeType = 1;
+        }
+        m_boardSquareState[kBoardSquareGateEven] = kBoardSquareIdle;
+        m_boardSquareState[kBoardSquareGateOdd] = kBoardSquareIdle;
+        break;
+    case 0x1d: // 0x9f3fe
+        m_rouletteMode = -1;
+        m_treasureProgress = static_cast<int8_t>(m_treasureProgress + 1);
+        break;
+    default: // 0..6, 0x0a..0x10 and 0x12..0x17 keep the mode standing
+        break;
+    }
+}
+
+// case 0x27 — wait out the visitor request. On success the communicating overlay comes down; on
+// failure the skill's treasure-point cost is refunded and the failure reported. Ghidra: 0x9b17e.
+void AcMainTask::stateVisitorWait() {
+    DownloadMain *download = [DownloadMain getInstance];
+    if ([download isGetVisitorDownLoading]) { // 0x9b1b2
+        return;
+    }
+
+    MainViewController *root =
+        static_cast<MainViewController *>(neSceneManager::rootViewController());
+    if (!download.isGetVisitorSuccess) {                                       // 0x9b1ce
+        const int cost = m_skillData->weight;                                  // 0x9dd38
+        m_treasurePoint = std::min(m_treasurePoint + cost, kMaxTreasurePoint); // 0x9dd4c
+        [UserSettingData saveTreasurePoint:static_cast<short>(m_treasurePoint)];
+        [UserSettingData addConsumedTreasurePoint:static_cast<short>(-cost)];
+        [root CommunicatingFailed];        // 0x9dda4
+        m_state = kAcMainStateBoardReveal; // 0x9dda8
+        return;
+    }
+
+    [root DeleteCommunicating];           // 0x9b202
+    m_state = kAcMainStateFriendMeetAnim; // 0x9b206
+}
+
+// case 0x28 — tick the goal/friend reveal counter; on frame 15 swap in the goal portrait and the
+// pending record's goal name, and past frame 29 hand back to the board. Ghidra: 0x9b20c.
+void AcMainTask::stateFriendMeetAnim() {
+    if (m_friendAnimFrame > 29) {
+        // 0x9b212 bgt 0x9c98e, which clears +0x5e8 and falls into the shared state-3 store.
+        m_friendAnimFrame = 0;
+        m_state = kAcMainStateBoardReveal;
+        return;
+    }
+    if (++m_friendAnimFrame != 15) { // 0x9b21c cmp #0xf / 0x9b21e bne tail
+        return;
+    }
+
+    // 0x9b244 treasureTmp, 0x9b248 frees the goal portrait, 0x9b25c releases the cached name and
+    // 0x9b29a takes the record's goalName.
+    TreasureTmpData tmp = [UserSettingData treasureTmp];
+    m_goalCharaTex.reset();
+    if (m_mapName) {
+        static_cast<void>((__bridge_transfer id)m_mapName);
+        m_mapName = nullptr;
+    }
+    m_mapName = (__bridge_retained void *)[NSString stringWithUTF8String:tmp.goalName];
+    buildMapPanelLayers(); // 0x9b2b8
 }
 
 // case 0x1b — the goal payout. Mark the friend meet consumed, then reveal one randomly-chosen
@@ -1623,6 +2925,115 @@ void AcMainTask::stateShowArrows() {
         }
     }
     m_state = kAcMainStateMapDrag; // 0x9a6b4
+}
+
+// Choose the forward link the walk steps along. An unset index takes the only link there is; a
+// junction hands over to the direction arrows instead and leaves the walk parked.
+// Ghidra: 0x9d6a4.
+const TreasureMap::Node *AcMainTask::pickForwardLink() {
+    if (m_moveLinkIndex < 0) { // 0x9d6a8 cmp #0xff
+        if (countSquareLinks(m_curNode, 0) != 1) {
+            m_state = kAcMainStateShowArrows; // 0x9e23e movs 0xf
+            return nullptr;
+        }
+        m_moveLinkIndex = 0; // 0x9d6b4
+    }
+    return m_curNode->links[m_moveLinkIndex]; // 0x9d6be / 0x9d6c2
+}
+
+// The recovery for backing up into a square with no back link: a junction still raises the arrows,
+// but an already-chosen index is honoured and a single link is taken outright. Ghidra: 0x9e224.
+const TreasureMap::Node *AcMainTask::pickBackupLink() {
+    if (countSquareLinks(m_curNode, 0) > 1) { // 0x9e22e / 0x9e232
+        m_state = kAcMainStateShowArrows;     // 0x9e78e
+        if (m_moveLinkIndex < 0) {            // 0x9e796
+            return nullptr;
+        }
+    } else {
+        m_moveLinkIndex = 0; // 0x9e238
+    }
+    return m_curNode->links[m_moveLinkIndex]; // 0x9e79c -> 0x9d6be
+}
+
+// Arm the scroll and player eases toward the square the walk is stepping onto, then hand over to
+// the step state. The scroll target carries the same +52 / +64 half-tile bias the rest of the
+// board uses and is clamped into the map's scroll box; the player target is the raw tile position,
+// unbiased and unclamped (0x9d7ce and 0x9d814 convert the products before the biases are added).
+// Ghidra: the shared block at 0x9d76e, whose velocity tail only runs for this state.
+void AcMainTask::armBoardStepEase(const TreasureMap::Node *dest) {
+    const int tileX = dest->x * 0x1a; // 0x9d770..0x9d77c
+    const int tileY = dest->y * 0x1a; // 0x9d778 / 0x9d7aa
+    const float biasedX = static_cast<float>(tileX + 0x34);
+    const float biasedY = static_cast<float>(tileY + 0x40);
+
+    m_scrollTargetX = std::min(std::max(biasedX, m_clampCentreX), m_clampCentreX2); // 0x9d7e0
+    m_scrollTargetY = std::min(std::max(biasedY, m_clampMinY), m_clampMaxY);        // 0x9d818
+    m_playerTargetX = static_cast<float>(tileX);                                    // 0x9d81c
+    m_playerTargetY = static_cast<float>(tileY);                                    // 0x9d820
+
+    // 0x9d824: the block above is shared with other states, but only the walk arms the eases.
+    if (m_state != kAcMainStateBoardIdleBonus) {
+        return; // 0x9d82e
+    }
+
+    // 0x9d83a / 0x9d842: the two speeds are vmov.f32 immediates, -10.0f and +10.0f.
+    m_scrollVelX = (m_scrollX < m_scrollTargetX) ? 10.0f : -10.0f; // 0x9d84e
+    m_scrollVelY = (m_scrollY < m_scrollTargetY) ? 10.0f : -10.0f; // 0x9d878
+    m_playerVelX = (m_playerX < m_playerTargetX) ? 10.0f : -10.0f; // 0x9d8a2
+    m_playerVelY = (m_playerY < m_playerTargetY) ? 10.0f : -10.0f; // 0x9d8cc
+    m_state = kAcMainStateBoardStepAdvance;                        // 0x9d8de movs 0x0a
+}
+
+// case 0x09 — the board hub variant that starts one step of the walk. It settles which direction
+// the token travels, resolves the square it steps onto, and arms the eases. Ghidra: 0x9a444.
+void AcMainTask::stateBoardIdleBonus() {
+    m_rankBadgeType = 0xff; // 0x9a446
+
+    int moveState = m_boardMoveState; // 0x9a44a
+    const TreasureMap::Node *dest = nullptr;
+
+    // 0x9a44e: `bic r1,#1` folds move states 2 and 3 together, so this is the backing-up test.
+    // Losing the back link drops the walk into the forward direction.
+    bool forward = false;
+    if ((moveState & ~1) == 2) {                   // 0x9a452
+        if (countSquareLinks(m_curNode, 1) == 0) { // 0x9a462
+            m_boardMoveState = 0;                  // 0x9d68e
+            forward = true;
+        } else {
+            moveState = m_boardMoveState; // 0x9a46c
+        }
+    }
+    if (!forward && moveState == 0) { // 0x9a470 -> 0x9cec4
+        forward = true;
+    }
+
+    if (forward) {
+        // 0x9d692: with no forward link the token backs up instead, and a player-start square
+        // backs up as state 3 rather than 2.
+        if (countSquareLinks(m_curNode, 0) == 0) {
+            m_boardMoveState =
+                (m_curNode->type == TreasureMap::kSquarePlayerStart) ? 3 : 2; // 0x9d75c
+            dest = m_curNode->backLink;                                       // 0x9d76e
+        } else {
+            dest = pickForwardLink();
+        }
+    } else if (moveState == 1) {                   // 0x9a47a
+        if (countSquareLinks(m_curNode, 0) != 0) { // 0x9a488
+            dest = pickForwardLink();
+        } else {
+            m_boardMoveState = 2;       // 0x9a494
+            dest = m_curNode->backLink; // 0x9a49c -> 0x9d76e
+        }
+    } else {
+        dest = m_curNode->backLink; // 0x9cfbc
+        if (!dest) {
+            dest = pickBackupLink(); // 0x9cfc0 -> 0x9e224
+        }
+    }
+
+    if (dest) {
+        armBoardStepEase(dest);
+    }
 }
 
 // case 0x0a — one step of the board walk. Hold the frame until both position eases have settled,
