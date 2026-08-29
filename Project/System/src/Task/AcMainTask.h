@@ -348,8 +348,12 @@ private:
     float m_playerX = {};       // +0x5cc player board draw x
     float m_playerY = {};       // +0x5d0 player board draw y
     int m_boardMoveState = {};  // +0x5d4 board move / warp state
-    bool m_boardBgmLoaded = {}; // +0x5d8 board BGM loaded flag
-    // +0x5d9: 7 bytes unused padding (dropped; runtime struct, layout not preserved)
+    // +0x5d8 index of the link the token walks out along, -1 while idle. The binary stores -1
+    // here (0x9d6a8, and 0xa141c in loadTreasureMap), and state 0x0a steps m_curNode along
+    // m_curNode->links[m_moveLinkIndex], so this is a signed index and not a flag.
+    int8_t m_moveLinkIndex = -1;
+    // +0x5d9: 3 bytes unused padding (dropped; runtime struct, layout not preserved)
+    int m_rouletteStopTimer = {};  // +0x5dc roulette brake frame counter
     int m_charaColRight = {};      // +0x5e0 chara-grid right column base index
     int m_charaColLeft = {};       // +0x5e4 chara-grid left column base index
     int m_friendAnimFrame = {};    // +0x5e8 friend-meet animation frame
@@ -364,8 +368,12 @@ private:
     // hides the square label and case 0x23 clears it when the +0x6c layer finishes.
     // Accessed as a byte in the binary (strb/ldrb), not an int.
     bool m_squareAnimActive = {}; // +0x5f3
-    // +0x5f4: 3 bytes unused padding (dropped; runtime struct, layout not preserved)
-    bool m_padDisplay = {}; // +0x5f7 iPad display flag
+    // The goal payout raises these three when it completes a collection, and states 0x13, 0x14
+    // and 0x15 each consume one to decide whether to play its LIFTING_* reveal or fall through.
+    bool m_musicCompleteReveal = {}; // +0x5f4 the map's 9 music pieces just completed
+    bool m_wallCompleteReveal = {};  // +0x5f5 the map's 9 wallpaper pieces just completed
+    bool m_newMapReveal = {};        // +0x5f6 the next area's record was just created
+    bool m_padDisplay = {};          // +0x5f7 iPad display flag
     bool m_revealTexLoaded =
         {}; // +0x5f8 reveal texture loaded (gates the +0x60-layer reveal, case 0x2c/0x2d)
     bool m_eventIntroStarted =
@@ -470,20 +478,249 @@ private:
     int m_dlgBtn2W = {};       // +0x9b0 button2 w
     int m_dlgBtn2H = {};       // +0x9b4 button2 h
     int m_dlgLayoutB[16] = {}; // +0x9b8 device-branched dialog/friend layout constants (write-only)
-    // update()'s switch dispatches on this. The values are sparse (from the
-    // binary); states 4 and 0x10 share the map drag-scroll body.
+    // update()'s switch dispatches on this. The values are the full set of the
+    // binary's dispatch table at 0x99e96, which has 78 entries covering 0x00 to
+    // 0x4d contiguously; each entry has its own handler.
     enum AcMainState {
-        kAcMainStateInit = 0,           // build the select / map scene, start the BGM
-        kAcMainStateFadeIn = 1,         // fade out, restore the BGM stack, push map-select
-        kAcMainStateTreasureCheck = 2,  // wait for / load the pending treasure sub-map
-        kAcMainStateBoardReveal = 3,    // switch the scene to fade-in, save the tmp record,
-                                        // play the board layers, arm the reveal countdown
-        kAcMainStateBoardIdle = 4,      // interactive board hub: roulette intro, drag, tap routing
-        kAcMainStateBoardIdleBonus = 9, // board hub variant entered when a bonus map is active
-        kAcMainStateMapDrag = 0x10,     // sugoroku map drag-scroll
-        kAcMainStateExitBegin = 0x4b,   // begin the exit fade-out (no pending sub-map)
-        kAcMainStateExitWait = 0x4c,    // wait for the exit fade-out to finish
-        kAcMainStateExitToMenu = 0x4d,  // fade done: spawn MenuMainTask, dispose this task
+        // Build the select / map scene and start the BGM.
+        kAcMainStateInit = 0,
+        // Fade out, restore the BGM stack, and push map-select.
+        kAcMainStateFadeIn = 1,
+        // Wait for, then load, the pending treasure sub-map.
+        kAcMainStateTreasureCheck = 2,
+        // Switch the scene to fade-in, save the tmp record, play the board layers, and arm the
+        // reveal countdown.
+        kAcMainStateBoardReveal = 3,
+        // Interactive board hub: roulette intro, drag, and tap routing.
+        kAcMainStateBoardIdle = 4,
+        // Arm the accelerating scroll ease that recentres the board on the current square, then
+        // fill the roulette step-value table.
+        kAcMainStateRouletteScrollArm = 5,
+        // Advance the recentring ease each frame; on the frame it lands, open the roulette and
+        // pick the spin speed from the active treasure event.
+        kAcMainStateRouletteScrollWait = 6,
+        // Hand the opening animation over to the spinning loop, tick the step cursor, and stop
+        // the wheel on the next slot boundary when the player touches the screen.
+        kAcMainStateRouletteSpin = 7,
+        // Decelerate and park the wheel, commit and persist the rolled step value, then release
+        // the board — or hold it on an odd/even gate square whose message goes up instead.
+        kAcMainStateRouletteStop = 8,
+        // Board hub variant entered when a bonus map is active.
+        kAcMainStateBoardIdleBonus = 9,
+        // Finish one step of the board walk: wait for both eases, latch the junction id, step
+        // m_curNode along the chosen link, burn one move, and decide whether to walk again
+        // (state 9) or stop (state 0x0d).
+        kAcMainStateBoardStepAdvance = 0x0a,
+        // Open the board-square message: play the square SE, park the message board over or
+        // under the player token, freeze it, and set the rank badge to the message-open type.
+        kAcMainStateSquareMessageOpen = 0x0b,
+        // Hold the square message on screen, redrawing its body every frame; a tap plays the
+        // cancel SE, clears the message board, and returns to the board-reveal state.
+        kAcMainStateSquareMessageRead = 0x0c,
+        // The walk has stopped: settle the move state, re-park the message board, age every
+        // square's highlight countdown, then route on the square kind to pick the arrival SE
+        // and the rank-badge type before handing over to the label state.
+        kAcMainStateSquareArrive = 0x0d,
+        // Hold on the tapped square's comment board and route as soon as a finger lifts or the
+        // board draws nothing.
+        kAcMainStateSquareMessage = 0x0e,
+        // Light the direction arrow for every cardinal neighbour the current square has, then
+        // hand over to the map-drag state so the player can pick one.
+        kAcMainStateShowArrows = 0x0f,
+        // Sugoroku map drag-scroll.
+        kAcMainStateMapDrag = 0x10,
+        // The goal square was tapped: play the goal SE, arm the friend-meet fade, roll and hand
+        // out the goal reward, flush the record, detect a just-completed music/wallpaper
+        // collection, upload the goal, create the next area's record and arm GOAL_OPEN.
+        kAcMainStateGoalAward = 0x11,
+        // Wait for GOAL_OPEN to finish, kick the LIFTING_GAOL_BOARD layer matching the reward
+        // that was just handed out, then hold until it has played out and the player taps.
+        kAcMainStateGoalRewardShow = 0x12,
+        // If this goal completed the map's nine music pieces, play LIFTING_MUSIC once and hold
+        // until it finishes and the player taps; otherwise fall straight through.
+        kAcMainStateMusicCompleteShow = 0x13,
+        // If this goal completed the map's nine wallpaper pieces, play LIFTING_WALL once and
+        // hold until it finishes and the player taps; otherwise fall straight through.
+        kAcMainStateWallCompleteShow = 0x14,
+        // If the goal opened a new area record, play LIFTING_MAP once and hold for a tap; when
+        // there is nothing to reveal it instead arms the 30-frame fade-out the next state waits
+        // on.
+        kAcMainStateNewMapShow = 0x15,
+        // Once the fade-out has finished, reset the board-story read progress if the player
+        // reached the last page, swap the shared system-SE pool, reload the roulette SEs, and
+        // go back to the map-select fade (state 1).
+        kAcMainStateGoalFinish = 0x16,
+        // A wallpaper-piece square was tapped: if the piece is already owned drop back to the
+        // board reveal, otherwise play the item-get SE, OR the piece into the pending record,
+        // reload the collection grids and arm GET_WALL.
+        kAcMainStateWallPieceGet = 0x17,
+        // Hold while the GET_WALL piece-reveal overlay finishes, then drop back into the board
+        // loop.
+        kAcMainStateWallPieceWait = 0x18,
+        // The player landed on a music-piece square: bank that square's piece bit into the
+        // pending record and arm the GET_MUSIC reveal.
+        kAcMainStateMusicPieceGrant = 0x19,
+        // Hold while the GET_MUSIC piece-reveal overlay finishes, then drop back into the board
+        // loop.
+        kAcMainStateMusicPieceWait = 0x1a,
+        // The goal payout: mark the friend meet consumed, then reveal one randomly-chosen
+        // awarded piece the collection lacks, or pay the goal's friendship out as treasure
+        // points when there is nothing left to reveal.
+        kAcMainStateGoalReward = 0x1b,
+        // Hold while the goal payout plays; a tap cuts the goal board short, and the state only
+        // advances once both piece-reveal overlays and the goal board are idle.
+        kAcMainStateGoalRewardWait = 0x1c,
+        // The player landed on a warp square: resolve the partner square, unless the board-
+        // effect slot that suppresses warps is still counting down.
+        kAcMainStateWarpBegin = 0x1d,
+        // Play the warp SE, park the EFF_WARP_3 overlay over the player token in screen space,
+        // arm it, and raise the warp squish flag.
+        kAcMainStateWarpEffect = 0x1e,
+        // The warp lands: once EFF_WARP_3 is done, commit the partner square as the current
+        // one, refit the scroll bounds and raise the warp flash.
+        kAcMainStateWarpArrive = 0x1f,
+        // Accelerate and ease the map scroll to the warp destination; when it settles, play the
+        // arrival SE, rewind the warp overlay over the player token, and wait for it.
+        kAcMainStateWarpScroll = 0x20,
+        // Hold until the warp overlay finishes playing back, then clear the warp animation gate
+        // and return to the board.
+        kAcMainStateWarpInWait = 0x21,
+        // Apply the landed board square's gimmick: dispatch on the square's slotId (0..14) and
+        // arm, clear or step the matching m_boardSquareState entry.
+        kAcMainStateSquareApply = 0x22,
+        // Hold while the square-select effect overlay plays, then drop the square-animation
+        // gate.
+        kAcMainStateSquareAnimWait = 0x23,
+        // Pick the random buttobi (fly-to) destination square and hand over to the warp-out
+        // animation.
+        kAcMainStateButtobiPick = 0x24,
+        // Start the skill effect: arm the effect overlay's one-shot, anchor it over the player
+        // token, and play the skill SE.
+        kAcMainStateSkillEffect = 0x25,
+        // Hold while the skill-effect overlay plays, then apply the roulette result: warps,
+        // direction flips, trap-square clears (which set the rank badge), the treasure-progress
+        // bump, or the visitor request.
+        kAcMainStateSkillEffectWait = 0x26,
+        // Wait out the visitor HTTP request kicked by roulette mode 0x11: on success dismiss
+        // the communicating overlay, on failure refund the skill's treasure-point cost and
+        // report the failure.
+        kAcMainStateVisitorWait = 0x27,
+        // Tick the goal/friend reveal counter; on frame 15 swap in the goal portrait and the
+        // pending record's goal name, and past frame 29 hand back to the board-reveal state.
+        kAcMainStateFriendMeetAnim = 0x28,
+        // Open the character-change panel: seed both page indices from the active character's
+        // grid page, load that page's textures, hand them to the drawn slots and start the open
+        // sweep.
+        kAcMainStateCharaChangeOpen = 0x29,
+        // Hold until the character-select open sweep settles, then hide the sugoroku board
+        // behind the panel on a phone layout.
+        kAcMainStateCharaChangeOpenWait = 0x2a,
+        // The character-select hub: settle a committed page flip, then route the frame's tap to
+        // the close button, the two page arrows, the character-lottery button or the 2x3 owned-
+        // character grid.
+        kAcMainStateCharaSelectIdle = 0x2b,
+        // Spend five tickets on the character lottery: arm the gacha overlay, fire the play-log
+        // beacon, draw the awarded character (server list, else a rarity-weighted pick over the
+        // missing ones), bank the spend and load the award portrait.
+        kAcMainStateCharaGachaRoll = 0x2c,
+        // Hold the gacha overlay; once its play head passes frame 146 swap the awarded
+        // character's grid portrait in (only while its page is the one on screen), and on the
+        // next tap extend the overlay into its closing run.
+        kAcMainStateCharaGachaReveal = 0x2d,
+        // The gacha overlay has closed: drop the award portrait and refresh the owned-character
+        // working copy so the grid redraws with the new character.
+        kAcMainStateCharaGachaClose = 0x2e,
+        // The player picked a character: load its board portrait into the scratch texture slot
+        // and open the confirmation panel.
+        kAcMainStateCharaSelectApply = 0x2f,
+        // Character-change confirmation: wait for the SELECTION_CHARA_OPEN overlay to settle,
+        // then commit the picked character on a tap inside the confirm rect, or treat any other
+        // tap as a cancel.
+        kAcMainStateCharaConfirm = 0x30,
+        // Drop the character-confirm overlay and run its close animation, returning to the
+        // character list.
+        kAcMainStateCharaConfirmCancel = 0x31,
+        // Start the character-select screen's close: park the arrow and open overlays, run
+        // CHARACTER_SELECTION_OUT, clear the dim and re-enable the board draw.
+        kAcMainStateCharaSelectClose = 0x32,
+        // Wait for CHARACTER_SELECTION_OUT to finish, free the chara page textures, and return
+        // to the board-reveal state.
+        kAcMainStateCharaSelectCloseWait = 0x33,
+        // After a committed character change, park both open overlays and start
+        // SELECTION_CHARA_CLOSE and CHARACTER_SELECTION_OUT, re-enabling the board draw.
+        kAcMainStateCharaChangeClose = 0x34,
+        // Wait for the close overlays, free the chara page textures, park SELECT_ARROW, and
+        // return to the board-reveal state.
+        kAcMainStateCharaChangeCloseWait = 0x35,
+        // Play the collection-select menu's opening overlay once.
+        kAcMainStateCollectionOpen = 0x36,
+        // Wait for the collection-menu opening overlay, then hide the sugoroku board behind it
+        // on phones.
+        kAcMainStateCollectionOpenWait = 0x37,
+        // Collection-menu tap routing: three hit rects sending the player to the music-piece
+        // board, the wallpaper board, or back out.
+        kAcMainStateCollectionMenu = 0x38,
+        // Open the music-piece collection board, arming the transition dim on the pad layout.
+        kAcMainStateMusicPieceOpen = 0x39,
+        // Wait for the music-piece board to finish opening, then park the collection-menu layer
+        // and hand over to the board's own state.
+        kAcMainStateMusicPieceOpenWait = 0x3a,
+        // The music-piece collection board is up and interactive: tap a panel to open its
+        // reveal overlay, or tap the close button to leave.
+        kAcMainStateMusicPieceView = 0x3b,
+        // Hold until the MUSIC_PEACE_OPEN reveal overlay has finished playing in, then free the
+        // reveal SE slot and show the piece list.
+        kAcMainStateMusicPieceRevealWait = 0x3c,
+        // The music-piece reveal is on screen: advance the reveal and result-overlay frames,
+        // and on a tap persist every newly revealed piece to Core Data (the inlined
+        // SaveCoreDataMusicPieceView) before returning to the board.
+        kAcMainStateMusicPieceReveal = 0x3d,
+        // Open the wallpaper-piece collection board: play the WALL_PEACE_S panel in and load
+        // page 0's nine nail textures.
+        kAcMainStateWallBoardOpen = 0x3e,
+        // Hold until the WALL_PEACE_S panel has slid in, then park the collection-select panel
+        // and hand over to the interactive board.
+        kAcMainStateWallBoardOpenWait = 0x3f,
+        // The wallpaper-piece collection board is up and interactive: tap a panel to open its
+        // reveal (loading that page's board artwork and recomputing the page-complete flag), or
+        // tap the close button to leave.
+        kAcMainStateWallBoardIdle = 0x40,
+        // iPad-only close of the wall-piece board: wait for the WALL_PEACE_S panel to finish
+        // rewinding, drop the nine wall-nail textures, hand back to the board reveal.
+        kAcMainStateWallBoardClose = 0x41,
+        // Runs while WALL_PEACE_OPEN (roulette layer 9) plays the wallpaper open animation,
+        // fading the save button in on the layer's own progress; advances to the full-size view
+        // when the layer settles.
+        kAcMainStateWallPieceOpen = 0x42,
+        // The full-size wallpaper view: steps the two reveal frame counters, and on a tap
+        // either arms the camera-roll save (inside the save button, once the map's nine pieces
+        // are owned) or closes back to the piece board, persisting any newly-revealed pieces.
+        kAcMainStateWallPieceView = 0x43,
+        // Builds the wallpaper file name from the map's nail index and the device's wallpaper
+        // height and hands it to MainViewController's asynchronous camera-roll save.
+        kAcMainStateWallSaveBegin = 0x44,
+        // Polls the asynchronous camera-roll save; on failure raises the permission alert and
+        // returns to the wallpaper view, on success plays the WALL_SAVE_COM confirmation once.
+        kAcMainStateWallSaveWait = 0x45,
+        // The "saved" confirmation panel: a tap once WALL_SAVE_COM has settled plays the decide
+        // SE, runs the layer backwards and returns to the wallpaper view.
+        kAcMainStateWallSaveDone = 0x46,
+        // Leaves the wallpaper collection screen: rewinds the collection-open panel, arms the
+        // collection-out panel, makes the board visible again and drops the nail textures.
+        kAcMainStateCollectionClose = 0x47,
+        // Holds until the collection-out panel finishes, then hands back to the board reveal.
+        kAcMainStateCollectionCloseWait = 0x48,
+        // Starts the standard 30-frame fade-out that precedes a full scene rebuild.
+        kAcMainStateMapReloadBegin = 0x49,
+        // Once the fade-out has finished and the decide SE has gone quiet, tears the sugoroku
+        // scene down, rebuilds it and restarts at the fade-in state.
+        kAcMainStateMapReloadWait = 0x4a,
+        // Begin the exit fade-out (no pending sub-map).
+        kAcMainStateExitBegin = 0x4b,
+        // Wait for the exit fade-out to finish.
+        kAcMainStateExitWait = 0x4c,
+        // Fade done: spawn MenuMainTask and dispose this task.
+        kAcMainStateExitToMenu = 0x4d,
     };
     AcMainState m_state = {}; // +0x9f8 play-data state machine field (update switch
                               // dispatches on it)
@@ -496,6 +733,11 @@ private:
     bool m_frameDragging = false;                  // a finger is currently held down
     bool m_frameTapped = false;                    // a tap landed this frame
     const neTouchPoint *m_frameTapTouch = nullptr; // the tapped touch (when m_frameTapped)
+    // The touch the preamble last saw released, held in r6 across both release arms (0x99dc0).
+    // This is not m_frameTapTouch: the preamble stops classifying a tap once the finger has
+    // travelled more than 10 units, so a released drag leaves m_frameTapTouch null while this
+    // one stays set. State 0x0e reads it at 0x9a66a to decide whether to route the square tap.
+    const neTouchPoint *m_frameReleasedTouch = nullptr;
 };
 
 /**

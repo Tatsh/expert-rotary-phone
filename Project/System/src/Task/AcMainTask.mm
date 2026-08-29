@@ -1303,7 +1303,7 @@ void AcMainTask::loadTreasureMap() {
 #endif
     [audio pushBgm];
     [audio loadBgm:bgmPath isLoop:YES];
-    m_boardBgmLoaded = 0xff;
+    m_moveLinkIndex = -1;
 }
 
 // ===========================================================================
