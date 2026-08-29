@@ -79,6 +79,47 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - The friend-score badge on the picked-song overlay reflects whether the song actually has an
     over-score entry. The chosen song's id was written to a field the draw callback does not read,
     so the badge always drew its 'untouched' artwork and the friend-update bar never appeared.
+- The title screen now behaves as the original binary does in the places where the reconstruction
+  had diverged:
+  - The device-transfer button is anchored ten points below the top of the frame rather than ten
+    points above it. The -10 the reconstruction took for the button's Y belongs to its X, so the
+    safe-area-inset correction that compensated for the clipped origin is gone with it.
+  - The device-transfer button fades out over 0.3 s rather than 0.25 s, restoring the original's
+    asymmetry with its 0.25 s fade-in, which is unchanged.
+  - The network-failure alert shown when the file-list download fails on an out-of-date client
+    carries the original's text asking the player to retry somewhere with better reception, and an
+    OK button. Both its message and its button label were empty.
+  - The device-transfer alert carries its title, the full explanation that a transfer pass has
+    already been issued and that the data must be reset, and its reset-data button label. The
+    title, three of the four message lines, and the label were missing, which left the button that
+    starts the data-reset flow unlabelled.
+- The mode-select screen, the main menu, now behaves as the original binary does in the places where
+  the reconstruction had diverged:
+  - Taps are hit-tested against the release point instead of the finger-down point. The accept gate
+    allows up to ten device pixels of travel, so a tap near a button edge hit the neighbouring
+    button or nothing at all. This is the same defect already fixed on the song-select screen, and
+    it affected every mode button, the settings, present, and featured buttons, and the news-ticker
+    band.
+  - The three background and prompt layers are built with the original's owner and ordering
+    priorities of 14, 14, and 11 rather than no owner and priority 0, so they are no longer drawn
+    last over the settings, store, and gift button labels and over the new-pack, treasure-event,
+    game-event, and friend-request badges.
+  - The three event badges and three button labels are drawn through the sprite-handle draw their
+    handles were resolved for rather than the layer-tree draw, which drew nothing or an unrelated
+    sprite. The attention pulse now reaches the three badges, so they flash again.
+  - The friend-request warning badge samples its own 42-texel window of the texture, 86 on iPad,
+    instead of an over-extended 100-texel crop: its size and scale arguments were transposed. Its
+    alpha and texture-filter arguments are no longer left at zero.
+  - The menu BGM fades in over half a second, as the original does, rather than cutting hard.
+  - The arcade-viewer button plays its own voice. The sixth menu sound effect loaded the wrong clip.
+  - The reward-network session parameters carry the reward application id and the player id
+    alongside the environment pair, as the binary stores them. They are archived to disk and read
+    back by later token requests.
+- `CharaManagerShared` no longer reloads every character record on first use. In the binary, that
+  accessor builds nothing: it is an empty constructor behind a one-shot guard, and the two real
+  reload sites, the title hand-off and the arcade task, are already reconstructed. The spurious
+  reload re-created the character records just after the title screen had built them, which also
+  left a cached pointer in the arcade task dangling.
 
 ### Removed
 

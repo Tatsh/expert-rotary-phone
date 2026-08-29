@@ -76,10 +76,11 @@ private:
 extern CharaManager gCharaManager;
 
 /**
- * Ensure the global character lists are built exactly once, behind a lazy first-use guard.
+ * The global character manager.
  *
- * Ghidra: FUN_0002980c, a ___cxa_guard-protected one-shot around gCharaManager.reload()
- * (FUN_000b85b8).
+ * Ghidra: FUN_0002980c, a ___cxa_guard around the function-local static's constructor at
+ * 0xb85b8, which is an empty `bx lr`. The accessor builds nothing; the lists come from the two
+ * reload() sites the binary has, in TitleTask::finish and AcMainTask.
  * @return The global instance.
  */
 CharaManager &CharaManagerShared();

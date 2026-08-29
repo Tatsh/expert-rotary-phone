@@ -30,15 +30,13 @@
 
 CharaManager gCharaManager;
 
-// Ghidra: getCharaManager FUN_0002980c — a ___cxa_guard-protected one-shot that
-// calls gCharaManager.reload() on first use, then returns the global. The C++
-// function-local static reproduces the same construct-once guard semantics.
+// Ghidra: getCharaManager @ 0x2980c — a ___cxa_guard around the function-local
+// static's constructor, which is the 2-byte `bx lr` at 0xb85b8. It builds nothing:
+// reload is the separate 0xb85bc, and get_xrefs_to shows the binary calls it from
+// exactly two sites, TitleTask::finish (0x2c4a4) and AcMainTask (0x9fd10), both of
+// which this tree already models. Reloading here as well replaced every CharaInfo
+// behind the caches those two sites had just populated.
 CharaManager &CharaManagerShared() {
-    static const bool once = [] {
-        gCharaManager.reload();
-        return true;
-    }();
-    static_cast<void>(once);
     return gCharaManager;
 }
 

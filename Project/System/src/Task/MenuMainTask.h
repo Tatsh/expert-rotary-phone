@@ -155,8 +155,8 @@ private:
     int m_storeLabelX = 0;          // +0x8c store label X
     int m_giftLabelX = 0;           // +0x90 gift label X
     TopCluster m_top = {};          // +0x94 settings/gift packed rects
-    int m_warnScaleX = 0;           // +0xac warning-badge scale X
-    int m_warnScaleY = 0;           // +0xb0 warning-badge scale Y
+    int m_warnBadgeW = 0;           // +0xac warning-badge quad width (also the UV span numerator)
+    int m_warnBadgeH = 0;           // +0xb0 warning-badge quad height
     bool m_suppressOverlay = false; // +0xb4 overlay suppressed while tearing down
     bool m_tutorialSkip = false;    // +0xb5 tutorial already played
     bool m_giftEnabled = false;     // +0xb6 gift button/label enabled

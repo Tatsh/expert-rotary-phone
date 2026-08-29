@@ -19,6 +19,7 @@
 
 #import <UIKit/UIKit.h>
 
+#import "AepFrameDraw.h"
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
@@ -147,8 +148,8 @@ void MenuMainTask::setup() {
         m_buttons[kBtnInvite] = {0xf1, yoff + 0x2df, 0x99, 0x99};        // +0x188
         m_buttons[kBtnArcadeSearch] = {0x1a1, yoff + 0x24a, 0xe7, 0xdf}; // +0x198
         m_warnBadgePos = {0x18b, yoff | 0x206};                          // +0x120
-        m_warnScaleX = 0x2a;                                             // +0xac
-        m_warnScaleY = 0x2a;                                             // +0xb0
+        m_warnBadgeW = 0x2a;                                             // +0xac
+        m_warnBadgeH = 0x2a;                                             // +0xb0
         sceneGroup = "mode_select";
         layerNames[0] = tall ? "BG_IMG_1136_OPEN" : "BG_IMG_640_OPEN";
         layerNames[1] = tall ? "BG_IMG_1136_ROOP" : "BG_IMG_640_ROOP";
@@ -182,8 +183,8 @@ void MenuMainTask::setup() {
         m_buttons[kBtnInvite] = {0x4a8, 0x52, 0x188, 0x154};        // +0x188
         m_buttons[kBtnArcadeSearch] = {0x24d, 0x5b4, 0x1a4, 0x1bd}; // +0x198
         m_warnBadgePos = {0x274, 0x2e8};                            // +0x120
-        m_warnScaleX = 0x56;                                        // +0xac
-        m_warnScaleY = 0x56;                                        // +0xb0
+        m_warnBadgeW = 0x56;                                        // +0xac
+        m_warnBadgeH = 0x56;                                        // +0xb0
         sceneGroup = "mode_select_ipad";
         layerNames[0] = "BG_IMG_PAD_OPEN";
         layerNames[1] = "BG_IMG_PAD_ROOP";
@@ -194,9 +195,13 @@ void MenuMainTask::setup() {
     // layers: [0] intro (+0x28), [1] looping background (+0x2c), [2] prompt
     // (+0x30).
     aep.loadAepDataDefaultPath(2, sceneGroup);
+    // The ordering-table priorities live in the three-int table at 0x12f84c, which
+    // 0x6cbfe indexes; 0x6cc02 passes this as the owner. Without them all three
+    // layers share bucket 0 and flush last, painting over the badges and labels.
+    static constexpr int kLayerOrder[3] = {14, 14, 11};
     for (int i = 0; i < 3; i++) {
         auto layer = std::make_unique<AepLyrCtrl>();
-        layer->init(2, layerNames[i]);
+        layer->init(2, layerNames[i], this, kLayerOrder[i]);
         m_layers[i] = std::move(layer);
     }
 
@@ -241,7 +246,9 @@ void MenuMainTask::setup() {
 
     // The six UI SEs (group 1): keep each source id at +0x50.. and clear its
     // playing instance slot at +0x68.. (RSND_INSTANCE_ID_ERROR).
-    static const char *const kSeNames[6] = {"v13", "v14", "v15", "v16", "v17", "v12"};
+    // The sixth entry is the standalone CFString at 0x135738, not part of the
+    // sequential v13-v17 run the first five come from.
+    static const char *const kSeNames[6] = {"v13", "v14", "v15", "v16", "v17", "v21"};
     for (int i = 0; i < 6; i++) {
         NSString *sePath = [[NSBundle mainBundle] pathForResource:@(kSeNames[i]) ofType:@"m4a"];
         RSND_SOURCE_ID sid = [audio loadSe:sePath isLoop:NO callName:nil group:1];
@@ -308,10 +315,10 @@ void MenuMainTask::update(int /*deltaMs*/) {
     AudioManager *audio = [AudioManager sharedManager];
 
     // Tap detection: the first released touch whose start/end differ by < 11px in
-    // both axes. Its down point is logged in the (screen-scale-divided) layout
+    // both axes. Its release point is logged in the (scale-divided) layout
     // coordinate space the button rects live in.
     neGraphics &gfx = neGraphics::shared();
-    const float uiScale = neSceneManager::screenScale();
+    const float uiScale = g_uiScale; // 0x6ae30 reads the same word MainTask::Setup does
     int tapX = -1, tapY = -1;
     bool haveTap = false;
     for (int i = 0, n = gfx.activeTouchCount(); i < n; i++) {
@@ -323,12 +330,12 @@ void MenuMainTask::update(int /*deltaMs*/) {
         // pool stores plain pixels, so the binary's raw value applies directly.
         const int dx = t->x - t->startX, dy = t->y - t->startY;
         if ((dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb) {
-            // startX/startY are plain device pixels (touchBegan stores them via
-            // vcvt). The binary divides by the UI scale to reach
-            // logical coords. Disasm @ 0x6afae: vcvt.f32.s32(nStartX) / g_uiScale
-            // -> vcvt.s32.f32, i.e. (int)((float)nStartX / uiScale).
-            tapX = static_cast<int>(static_cast<float>(t->startX) / uiScale);
-            tapY = static_cast<int>(static_cast<float>(t->startY) / uiScale);
+            // The slop above is measured from the down point, but the point that
+            // survives into the divide is the release point: 0x6ae6c/0x6ae6e load
+            // +0xc/+0x10 into r2/r1, and those are the registers 0x6afa6/0x6af9e
+            // convert. The +0x4/+0x8 pair is destroyed by the abs computation.
+            tapX = static_cast<int>(static_cast<float>(t->x) / uiScale);
+            tapY = static_cast<int>(static_cast<float>(t->y) / uiScale);
             neDebugLog("MenuMain tap=(%d,%d) state=%d", tapX, tapY, m_state);
             NSLog(@"%d %d", tapX, tapY);
             haveTap = true;
@@ -339,7 +346,8 @@ void MenuMainTask::update(int /*deltaMs*/) {
     switch (m_state) {
     case kMenuStateSetup: // build the scene, start the BGM, refresh the news if it is stale
         setup();
-        [audio playBgm:0];
+        // 0x6aeea builds the double 0.5 and 0x6aefa passes it in the r2:r3 pair.
+        [audio playBgm:0.5f];
         {
             // Fetch news when there is no session start stamp yet, or more than an
             // hour (3600s) has elapsed since it.
@@ -396,13 +404,18 @@ void MenuMainTask::update(int /*deltaMs*/) {
         break;
     case kMenuStateRewardSession: { // hand the reward network its session parameters
         NSString *url = [[StoreUtil getRewardLoginTokenURL] absoluteString];
-        // The binary also folds the reward appli id + player id into the session
-        // dictionary, but those __stdcall_softfp string args are lost in the
-        // decompile; only the {"env": "0"} pair is recoverable. RewardNetwork is a
-        // no-op stub here, so the exact dictionary is inert.
-        static_cast<void>([[AppDelegate appDelegate] rewardAppId]);
-        static_cast<void>([UserSettingData playerId]);
-        NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:@"0", @"env", nil];
+        // The two getters are hoisted so their order matches the binary's
+        // (rewardAppId at 0x6b15a strictly before playerId at 0x6b17a); variadic
+        // argument evaluation order is otherwise unspecified.
+        NSString *rewardAppId = [[AppDelegate appDelegate] rewardAppId];
+        NSString *playerId = [UserSettingData playerId];
+        NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:@"0",
+                                                                          @"env",
+                                                                          rewardAppId,
+                                                                          @"appli_id",
+                                                                          playerId,
+                                                                          @"user_id",
+                                                                          nil];
         [RewardNetwork setSessionParameters:params url:url method:@"GET"];
         m_state = kMenuStateWaitOpen;
         break;
@@ -762,11 +775,13 @@ void MenuMainTask::update(int /*deltaMs*/) {
 }
 
 /**
- * Ghidra: modeSelectTaskDispose (FUN_0006d1f0) — the state-0x14 handoff into the
- * launched sub-task. Field map: m_seId[6] @+0x50 (pAepLyrCtrl[10..15]), m_layers
- * @+0x28, m_warnTexture @+0x4c (pIconTexture), m_spawnedTask @+0x80 (pMainTask),
- * m_suppressOverlay @+0xb4 (bHidden). The spawned task only starts once it is
- * given a priority here, so an unimplemented state 0x14 would strand it.
+ * modeSelectTaskDispose — the state-0x14 handoff into the launched sub-task.
+ *
+ * Field map: m_seId[6] @+0x50 (pAepLyrCtrl[10..15]), m_layers @+0x28, m_warnTexture @+0x4c
+ * (pIconTexture), m_spawnedTask @+0x80 (pMainTask), m_suppressOverlay @+0xb4 (bHidden). The
+ * spawned task only starts once it is given a priority here, so an unimplemented state 0x14
+ * would strand it.
+ * @ghidraAddress 0x6d1f0
  */
 void MenuMainTask::dispose() {
     AepManager &aep = AepManager::shared();
@@ -834,55 +849,66 @@ void MenuMainTask::drawOverlay() {
     // Friend-request warning badge (a bundled texture at +0x4c, not an Aep
     // layer): drawn straight into the ordering table, faded by the pulse.
     if ([dl friendRequestedCnt] > 0) {
+        // 0x6d4be/0x6d4c6 pass +0xac/+0xb0 as the quad's base size and 0x6d4ec/
+        // 0x6d4f2 pass the literal 100 as the scale percentage. The destination
+        // rect comes out the same either way, but the base size is also the UV
+        // span numerator, so transposing them sampled a 100-texel window of the
+        // atlas instead of the badge's own 42 (86 on pad).
         neSpriteDrawParams p;
         p.x = m_warnBadgePos.x;
         p.y = m_warnBadgePos.y;
-        p.sx = m_warnScaleX;
-        p.sy = m_warnScaleY;
+        p.w = m_warnBadgeW;
+        p.h = m_warnBadgeH;
+        p.sx = 100;
+        p.sy = 100;
         p.color = pulse;
+        p.alpha = 100 - pulse; // 0x6d4b2
         p.priority = 0xc;
+        p.layer = 1; // 0x6d4e8; selects the linear texture filter
         m_warnTexture->draw(aep.orderingTable(), p);
     }
 
-    // The Aep frame-sprite badges/labels. Their handles (group << 16 | index)
-    // were resolved in setup(); position comes from the matching badge/label
-    // field, priority 0xc for the pulsing badges and 0xd for the static button
-    // labels. In the engine the pulse feeds each sprite's colour (Ghidra:
-    // FUN_0000fcd0's fade args).
-    AepTransform xform;
+    // The Aep frame-sprite badges/labels. Their handles were resolved with
+    // getFrmNo, so they must go through the sprite-handle draw (0xfcd0, all six
+    // calls in 0x6d428-0x6d6d3) rather than the layer-tree draw, which resolves
+    // the low half against the group's layer entries and lands on an unrelated
+    // record. The badges take the pulse as their colour with 100 - pulse alpha;
+    // the labels are a flat 100 / 0.
+    auto drawBadge = [&](int handle, int x, int y, int color, int alpha, int priority) {
+        drawAepFrameEx(&aep,
+                       handle,
+                       x,
+                       y,
+                       100,
+                       100,
+                       0,
+                       0,
+                       0,
+                       color,
+                       alpha,
+                       0x20,
+                       0xffffff,
+                       nullptr,
+                       priority,
+                       1);
+    };
 
     if ([dl isNewMusicPackReleased]) { // "new music pack" badge (+0x38)
-        xform.x = m_newPackBadgePos.x;
-        xform.y = m_newPackBadgePos.y;
-        xform.priority = 0xc;
-        aep.drawLayer(m_badgeHandles[0], 0, xform, 0);
+        drawBadge(
+            m_badgeHandles[0], m_newPackBadgePos.x, m_newPackBadgePos.y, pulse, 100 - pulse, 0xc);
     }
     if (m_treasureEvent && m_tutorialSkip) { // treasure-event badge (+0x48)
-        xform.x = m_treasureBadgePos.x;
-        xform.y = m_treasureBadgePos.y;
-        xform.priority = 0xc;
-        aep.drawLayer(m_badgeHandles[4], 0, xform, 0);
+        drawBadge(
+            m_badgeHandles[4], m_treasureBadgePos.x, m_treasureBadgePos.y, pulse, 100 - pulse, 0xc);
     }
     if (m_gameEvent && m_tutorialSkip) { // game-event badge (+0x48)
-        xform.x = m_gameBadgePos.x;
-        xform.y = m_gameBadgePos.y;
-        xform.priority = 0xc;
-        aep.drawLayer(m_badgeHandles[4], 0, xform, 0);
+        drawBadge(m_badgeHandles[4], m_gameBadgePos.x, m_gameBadgePos.y, pulse, 100 - pulse, 0xc);
     }
 
-    xform.x = m_settingsLabelX;
-    xform.y = m_labelRowY;
-    xform.priority = 0xd; // settings label (+0x3c)
-    aep.drawLayer(m_badgeHandles[1], 0, xform, 0);
-    xform.x = m_storeLabelX;
-    xform.y = m_labelRowY;
-    xform.priority = 0xd; // store label (+0x40)
-    aep.drawLayer(m_badgeHandles[2], 0, xform, 0);
-    if (m_giftEnabled) { // gift label (+0x44)
-        xform.x = m_giftLabelX;
-        xform.y = m_labelRowY;
-        xform.priority = 0xd;
-        aep.drawLayer(m_badgeHandles[3], 0, xform, 0);
+    drawBadge(m_badgeHandles[1], m_settingsLabelX, m_labelRowY, 100, 0, 0xd); // settings (+0x3c)
+    drawBadge(m_badgeHandles[2], m_storeLabelX, m_labelRowY, 100, 0, 0xd);    // store (+0x40)
+    if (m_giftEnabled) {                                                      // gift label (+0x44)
+        drawBadge(m_badgeHandles[3], m_giftLabelX, m_labelRowY, 100, 0, 0xd);
     }
 }
 

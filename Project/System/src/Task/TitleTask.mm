@@ -144,20 +144,9 @@ void TitleTask::buildConversionButton() {
     UIImage *img = [UIImage imageNamed:@"bt_conversion"];
     CGRect vf = root.view.frame;
     CGSize sz = img.size;
-    // The original binary anchors the button at y = -10 (its rounded top tucked
-    // just off the frame's top edge). On iOS 11+ the view extends under the status
-    // bar / notch, so that origin is clipped; offset it down by the safe-area top
-    // inset, and never let the top clip off-screen (the status bar is hidden, so a
-    // non-notched iPad reports a zero inset). This is a modern-iOS layout
-    // correction, not an ENABLE_PATCHES behaviour change.
-    CGFloat topY = -10.0f;
-    if (@available(iOS 11.0, *)) {
-        topY += root.view.safeAreaInsets.top;
-    }
-    if (topY < 0.0f) {
-        topY = 0.0f;
-    }
-    CGRect frame = CGRectMake(vf.size.width - sz.width - 10.0f, topY, sz.width, sz.height);
+    // 0x2be10 folds the only -10.0f in the routine into origin.x; origin.y is the
+    // separate +10.0f immediate built at 0x2be0e/0x2be18.
+    CGRect frame = CGRectMake(vf.size.width - sz.width - 10.0f, 10.0f, sz.width, sz.height);
     m_conversionButton = [[CustomButton alloc] initWithFrame:frame];
     [m_conversionButton setTappableInsets:UIEdgeInsetsMake(-20, -20, -20, -20)];
     m_conversionButton.exclusiveTouch = YES;
@@ -177,16 +166,18 @@ void TitleTask::buildConversionButton() {
 
     NSString *code = [UserSettingData convertCode];
     if (code != nil) {
-        NSString *msg = [NSString stringWithFormat:@"%@\n%@", [UserSettingData playerId], code];
-        // Localized title + dismiss-button strings kept external (@""
-        // placeholders); the alert reports back to the root VC (delegate).
+        NSString *msg = [NSString
+            stringWithFormat:@"機種変更パスを発行済みです。\nデータの初期化を行ってください。"
+                             @"\nプレーヤーID:%@\n機種変更パス:%@",
+                             [UserSettingData playerId],
+                             code];
         CommonAlertView *alert = [[CommonAlertView alloc]
-                initWithTitle:@""
+                initWithTitle:@"機種変更"
                       message:msg
                      delegate:(id<CommonAlertViewDelegate>)root
             cancelButtonTitle:nil
-            otherButtonTitles:@""]; // root (MainViewController) conforms privately
-                                    // (its .mm extension)
+            otherButtonTitles:@"初期化する"]; // root (MainViewController) conforms
+                                              // privately (its .mm extension)
         alert.tag = 0;
         [alert show];
     }
@@ -244,7 +235,9 @@ void TitleTask::update(int /*deltaMs*/) {
             [root InsertCommunicating];
         }
         if (m_conversionButton != nil) {
-            [UIView animateWithDuration:0.25
+            // 0x2ba3a loads the literal at 0x2bdd8, which reads back as 0.3f; the
+            // fade-in at 0x2bee4 really is 0.25, so the two are asymmetric.
+            [UIView animateWithDuration:0.3f
                                   delay:0
                                 options:UIViewAnimationOptionAllowUserInteraction
                              animations:^{
@@ -263,11 +256,13 @@ void TitleTask::update(int /*deltaMs*/) {
         if (m_dlFileList == nil) {
             m_needUpdate = true;
             if ([UserSettingData lastCompletedClientVer] < AppDelegate.appDelegate.appVersionNum) {
-                CommonAlertView *a = [[CommonAlertView alloc] initWithTitle:nil
-                                                                    message:@""
-                                                                   delegate:nil
-                                                          cancelButtonTitle:nil
-                                                          otherButtonTitles:@""];
+                CommonAlertView *a = [[CommonAlertView alloc]
+                        initWithTitle:nil
+                              message:
+                                  @"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
+                             delegate:nil
+                    cancelButtonTitle:nil
+                    otherButtonTitles:@"OK"];
                 [a show];
                 m_state = kTitleStateTitle;
                 break;
