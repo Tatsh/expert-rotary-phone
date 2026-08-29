@@ -149,6 +149,21 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateSquareMessage:
         stateSquareLabelWait();
         break;
+    case kAcMainStateGoalReward:
+        stateGoalReward();
+        break;
+    case kAcMainStateGoalRewardWait:
+        stateGoalRewardWait();
+        break;
+    case kAcMainStateSquareApply:
+        stateSquareApply();
+        break;
+    case kAcMainStateSquareAnimWait:
+        stateSquareAnimWait();
+        break;
+    case kAcMainStateButtobiPick:
+        stateButtobiPick();
+        break;
     case kAcMainStateWarpBegin:
         stateWarpBegin();
         break;
@@ -778,6 +793,217 @@ void AcMainTask::sugorokuArriveSubMapFlag() {
     parkLayerOverToken(flagLayer); // 0x9ec70..0x9ecd6
     m_squareAnimActive = true;     // 0x9ecde
     m_rankBadgeType = 1;           // 0x9ece2
+}
+
+// case 0x1b — the goal payout. Mark the friend meet consumed, then reveal one randomly-chosen
+// awarded piece the collection lacks; with nothing left to reveal the goal's friendship is paid
+// out as treasure points instead. Ghidra: 0x9ac28, the payout arm at 0x9ca4a.
+void AcMainTask::stateGoalReward() {
+    [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeItemGet]];
+
+    TreasureTmpData tmp = [UserSettingData treasureTmp]; // 0x9ac68
+    tmp.friendMeetFlag = 1;                              // 0x9ac74
+
+    // Count the awarded bits the collection has not banked yet, music first. Ghidra: the two
+    // three-iteration loops at 0x9ac80 and 0x9acc6.
+    int musicCandidates = 0;
+    for (int i = 0; i < 3; i++) {
+        if ((tmp.musicPieceMask & (1 << i)) != 0 &&
+            !sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, i)) {
+            musicCandidates++;
+        }
+    }
+    int wallCandidates = 0;
+    for (int i = 0; i < 3; i++) {
+        if ((tmp.wallPieceMask & (1 << i)) != 0 &&
+            !sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, i)) {
+            wallCandidates++;
+        }
+    }
+
+    const int candidates = musicCandidates + wallCandidates; // 0x9ad00
+    if (candidates < 1) {                                    // 0x9ad06
+        // Friendship converts to a treasure-point payout the goal board counts up. The 250.0 and
+        // 50.0 come from the pools at 0x9d8e8 and 0x9d8f0; the 10.0 is the vmov.f64 immediate at
+        // 0x9d6f2, and vcvt.s32.f64 truncates towards zero.
+        int friendship = tmp.friendship; // 0x9ca4a
+        if (friendship < 0) {
+            friendship = 0; // 0x9ca50
+        }
+        int points = 300;       // 0x9ca58
+        if (friendship <= 99) { // 0x9ca52
+            points = static_cast<int>((std::sqrt(static_cast<double>(friendship)) * 250.0 / 10.0) +
+                                      50.0); // 0x9d6de..0x9d702
+        }
+        m_rouletteDigit = static_cast<int16_t>(points); // 0x9d716
+
+        AepLyrCtrl *goalBoard = m_rouletteLayers[kRouletteGoalBoard[0]].get(); // 0x9d71a
+        goalBoard->playSpeed() = 1.0f;                                         // 0x9d724
+        goalBoard->playOnce();                                                 // 0x9d728
+
+        int balance = m_treasurePoint + points; // 0x9d73e
+        if (balance > kMaxTreasurePoint) {      // 0x9d740 cmp against 0x270f
+            balance = kMaxTreasurePoint;
+        }
+        m_treasurePoint = balance;                                         // 0x9d748
+        [UserSettingData saveTreasurePoint:static_cast<int16_t>(balance)]; // 0x9d754
+    } else {
+        int pick = m_rng.getRandRangeInt(candidates); // 0x9ad14
+        if (pick < musicCandidates) {                 // 0x9ad18
+            for (int i = 0; i < 3; i++) {             // 0x9ad30
+                if ((tmp.musicPieceMask & (1 << i)) == 0 ||
+                    sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, i)) {
+                    continue;
+                }
+                if (pick > 0) {
+                    pick--; // 0x9ad68
+                    continue;
+                }
+                // The scan already required this bit, so the OR is a no-op; the binary emits it
+                // all the same.
+                tmp.musicPieceMask |= 1 << i;                      // 0x9e242
+                m_rouletteLayers[kRouletteLayerGetMusic]->stop(1); // 0x9e33c
+                break;
+            }
+        } else {
+            pick -= musicCandidates;      // 0x9ce6c
+            for (int i = 0; i < 3; i++) { // 0x9ce80
+                if ((tmp.wallPieceMask & (1 << i)) == 0 ||
+                    sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, i)) {
+                    continue;
+                }
+                if (pick > 0) {
+                    pick--; // 0x9ceb8
+                    continue;
+                }
+                tmp.wallPieceMask |= 1 << i;                      // 0x9e32a
+                m_rouletteLayers[kRouletteLayerGetWall]->stop(1); // 0x9e33c
+                break;
+            }
+        }
+    }
+
+    [UserSettingData saveTreasureTmp:tmp]; // 0x9e358
+    loadTreasureProgress();                // 0x9e362
+    m_state = kAcMainStateGoalRewardWait;  // 0x9e366
+}
+
+// case 0x1c — hold while the goal payout plays. A tap cuts the goal board short, and the state
+// only advances once both piece-reveal overlays and the goal board are idle. Ghidra: 0x9ad74.
+void AcMainTask::stateGoalRewardWait() {
+    AepLyrCtrl *goalBoard = m_rouletteLayers[kRouletteGoalBoard[0]].get();
+    if (m_frameTapped && !goalBoard->isAnimating() && // 0x9ad76 / 0x9ad84
+        goalBoard->playSpeed() > 0.0f) {              // 0x9ad8e vcmpe s0,#0 / ble
+        neEngine::playSystemSe(2);                    // 0x9adb4
+        goalBoard->reset();                           // 0x9adbe
+    }
+
+    if (m_rouletteLayers[kRouletteLayerGetMusic]->isAnimating() || // 0x9adcc
+        m_rouletteLayers[kRouletteLayerGetWall]->isAnimating() ||  // 0x9addc
+        goalBoard->isActive()) {                                   // 0x9adf0
+        return;
+    }
+
+    m_rouletteDigit = 0;               // 0x9adfc
+    m_state = kAcMainStateBoardReveal; // 0x9ae00
+}
+
+// case 0x22 — apply the landed square's gimmick: dispatch on the square's slotId and arm, clear
+// or step the matching m_boardSquareState entry. Ghidra: 0x9b042, table at 0x9ca64.
+void AcMainTask::stateSquareApply() {
+    if (m_squareAnimActive) { // 0x9b042
+        m_state = kAcMainStateSquareAnimWait;
+        return;
+    }
+
+    m_state = kAcMainStateBoardReveal; // 0x9ca6a: every arm except slot 11
+    switch (m_curNode->slotId) {       // 0x9ca64 ldrsh node+0x8
+    case 0:                            // 0x9ca90
+        m_boardSquareState[0] = 1;
+        break;
+    case 1: // 0x9eed6
+        m_boardSquareState[1] = 1;
+        break;
+    case 2: // 0x9eeda
+        m_boardSquareState[2] = kBoardSquareEventPending;
+        break;
+    case 3: // 0x9eede
+        m_boardSquareState[3] = kBoardSquareEventPending;
+        break;
+    case 4: // 0x9eee8
+        m_boardSquareState[4] = 1;
+        break;
+    case 5: // 0x9eef2
+        m_boardSquareState[5] = 1;
+        break;
+    case 6: // 0x9eefc
+        m_boardSquareState[6] = 1;
+        break;
+    case 7: // 0x9ef06
+        m_boardSquareState[7] = 1;
+        break;
+    case 8: // 0x9ef10
+        m_boardSquareState[8] = 1;
+        break;
+    case 9: { // 0x9ef14: the friend-meet square is consumed
+        TreasureTmpData tmp = [UserSettingData treasureTmp]; // 0x9ef38
+        // 0x9ef50 zeroes sixteen bytes from +0x20 and 0x9ef5a / 0x9ef5e zero the words at +0x2d
+        // and +0x31, so the cleared span is [+0x20, +0x35): the friend id and the goal name
+        // together, and nothing past them.
+        std::memset(tmp.friendPlayerId, 0, sizeof(tmp.friendPlayerId));
+        std::memset(tmp.goalName, 0, sizeof(tmp.goalName));
+        [UserSettingData saveTreasureTmp:tmp];                            // 0x9ef66
+        m_goalCharaTex.reset();                                           // 0x9ef6a
+        m_boardSquareState[m_curNode->slotId] = kBoardSquareEventPending; // 0x9ef8a
+        break;
+    }
+    case 10: // 0x9ef92
+        m_boardSquareState[10] = 2;
+        break;
+    case 11: // 0x9ef96
+        m_boardSquareState[11] = kBoardSquareIdle;
+        m_state = kAcMainStateButtobiPick; // 0x9ef9c
+        break;
+    case 12: { // 0x9efa2: reverse the board travel direction
+        const int moveState = m_boardMoveState;
+        int next;
+        if (moveState == 2) {
+            next = 1; // 0x9f4c0
+        } else if (moveState == 1) {
+            next = 2; // 0x9efb2
+        } else {
+            next = (moveState != 0) ? 0 : 3; // 0x9f4c4..0x9f4ca
+        }
+        m_boardMoveState = next;                   // 0x9f4cc
+        m_boardSquareState[12] = kBoardSquareIdle; // 0x9f4d2
+        break;
+    }
+    case 13: // 0x9efb6
+        m_boardSquareState[13] = static_cast<int8_t>(m_boardSquareState[13] - 1);
+        break;
+    case 14: // 0x9efc4
+        m_boardSquareState[14] = 1;
+        break;
+    default: // 0x9ca6a: nothing to apply
+        break;
+    }
+}
+
+// case 0x23 — hold while the square-select effect overlay plays, then drop the gate.
+// Ghidra: 0x9b052.
+void AcMainTask::stateSquareAnimWait() {
+    if (m_rouletteLayers[kRouletteLayerSkillKouka]->isAnimating()) {
+        return;
+    }
+    m_squareAnimActive = false;
+    m_state = kAcMainStateBoardReveal;
+}
+
+// case 0x24 — pick the random buttobi (fly-to) destination and hand over to the warp-out
+// animation. Ghidra: 0x9b070.
+void AcMainTask::stateButtobiPick() {
+    m_targetNode = m_map->getButtobiSquare(m_curNode);
+    m_state = kAcMainStateWarpEffect;
 }
 
 // Park an overlay over the player token in screen space. The binary inlines this at each site
