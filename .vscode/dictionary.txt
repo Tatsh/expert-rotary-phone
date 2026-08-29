@@ -80,6 +80,7 @@ cfurl
 cfuuid
 chache
 chara
+chara's
 charassm
 checck
 chksco
@@ -139,14 +140,12 @@ easyyou
 elif
 endforeach
 eors
-errno
 esac
 esbenp
 etop
 extern
 eyou
 faile
-favorite
 featu
 floatloopcounter
 floatv
@@ -166,7 +165,6 @@ fritop
 ftrivial
 fukidasi
 fullcombo
-fullwidth
 gacha
 gamecenter
 gatsha
@@ -199,7 +197,6 @@ ifndef
 igles
 imagefrom
 immediates
-impls
 incl
 includer
 incomp
@@ -450,7 +447,6 @@ tssort
 udid
 udids
 udvare
-uffdc
 unarchiver
 unbiases
 unbiasing
@@ -508,7 +504,6 @@ wrange
 wshadow
 wundeclared
 wunreachable
-xform
 xors
 xorshift
 xrefs
@@ -521,4 +516,3 @@ yuuri
 yvgs
 ziparchive
 zizmor
-фade

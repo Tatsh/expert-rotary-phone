@@ -1,5 +1,5 @@
 ---
-name: minimal-comments
+name: comments
 description: 'Comments need to be to the point and serve a purpose.'
 ---
 
