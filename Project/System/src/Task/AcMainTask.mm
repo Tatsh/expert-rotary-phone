@@ -148,6 +148,18 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateSquareMessage:
         stateSquareLabelWait();
         break;
+    case kAcMainStateWallPieceGet:
+        stateWallPieceGet();
+        break;
+    case kAcMainStateWallPieceWait:
+        statePieceRevealWait(kRouletteLayerGetWall);
+        break;
+    case kAcMainStateMusicPieceGrant:
+        stateMusicPieceGrant();
+        break;
+    case kAcMainStateMusicPieceWait:
+        statePieceRevealWait(kRouletteLayerGetMusic);
+        break;
     case kAcMainStateGoalAward:
         stateGoalAward();
         break;
@@ -329,6 +341,8 @@ constexpr int kRouletteLayerEff = 4;          // ROULETTE_EFF
 constexpr int kRouletteLayerCommentBoard = 7; // SUGO_COMMENT_BOARD
 constexpr int kRouletteLayerSkillKouka = 16;  // EFF_SKILL_KOUKA2
 constexpr int kRouletteGoalOpen = 10;         // GOAL_OPEN
+constexpr int kRouletteLayerGetMusic = 11;    // GET_MUSIC
+constexpr int kRouletteLayerGetWall = 12;     // GET_WALL
 constexpr int kRouletteLayerLiftMusic = 19;   // LIFTING_MUSIC
 constexpr int kRouletteLayerLiftWall = 20;    // LIFTING_WALL
 constexpr int kRouletteLayerLiftMap = 21;     // LIFTING_MAP
@@ -337,14 +351,15 @@ constexpr int kRouletteLayerLiftMap = 21;     // LIFTING_MAP
 constexpr int kRouletteGoalBoard[3] = {23, 24, 25};
 
 // Indices into kRouletteSeNames, and so into m_rouletteSe / m_rouletteSeInst.
-constexpr int kRouletteSeOpen = 0;   // se11_roulapp
-constexpr int kRouletteSeStop = 2;   // se13_roulstop
-constexpr int kRouletteSeMove = 3;   // se14_move
-constexpr int kRouletteSeGoal = 12;  // se22_goal
-constexpr int kRouletteSeTrap = 5;   // se16_wana
-constexpr int kRouletteSeShield = 8; // se18_shield
-constexpr int kRouletteSePiece = 9;  // se19_peace
-constexpr int kRouletteSeQuiz = 14;  // se25_quiz_x
+constexpr int kRouletteSeOpen = 0;     // se11_roulapp
+constexpr int kRouletteSeStop = 2;     // se13_roulstop
+constexpr int kRouletteSeMove = 3;     // se14_move
+constexpr int kRouletteSeGoal = 12;    // se22_goal
+constexpr int kRouletteSeItemGet = 11; // se21_itemget
+constexpr int kRouletteSeTrap = 5;     // se16_wana
+constexpr int kRouletteSeShield = 8;   // se18_shield
+constexpr int kRouletteSePiece = 9;    // se19_peace
+constexpr int kRouletteSeQuiz = 14;    // se25_quiz_x
 
 // The m_boardSquareState slot a warp square checks before it will fire.
 constexpr int kWarpGateSquareSlot = 10;
@@ -352,6 +367,9 @@ constexpr int kWarpGateSquareSlot = 10;
 constexpr int kTreasurePointBoostSquareSlot = 13;
 // The treasure-point balance saturates here.
 constexpr int kMaxTreasurePoint = 9999;
+
+// Defined below with the other sugoroku draw helpers; the piece-award states run before it.
+static bool sugorokuPieceUnlocked(const uint32_t *grid, int charId, int bitIndex);
 
 // Maps a sugoroku main-map id (0..8) to its touch-sound bit index. Ghidra: FUN_000a218c. The tree
 // already carries this as a file-local static in UserSettingData.mm and
@@ -747,6 +765,57 @@ void AcMainTask::sugorokuArriveSubMapFlag() {
         static_cast<int>((playerY - scrollY) + static_cast<float>(halfH))); // 0x9ecd6
     m_squareAnimActive = true;                                              // 0x9ecde
     m_rankBadgeType = 1;                                                    // 0x9ece2
+}
+
+// case 0x17 — a wallpaper-piece square was tapped. An already-owned piece drops straight back to
+// the board; otherwise the piece bit is OR'd into the pending record, the grids are reloaded and
+// GET_WALL is armed. Ghidra: 0x9aa7a.
+void AcMainTask::stateWallPieceGet() {
+    // The +0x748 grid is indexed the same way loadTreasureProgress builds it. Ghidra:
+    // 0x9aa7e..0x9aab2.
+    if (sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, m_curNode->slotId)) {
+        m_state = kAcMainStateBoardReveal; // 0x9aab8
+        return;
+    }
+
+    [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeItemGet]];
+
+    TreasureTmpData tmp = [UserSettingData treasureTmp];
+    tmp.wallPieceMask |= static_cast<int32_t>(1u << m_curNode->slotId); // 0x9ab12
+    [UserSettingData saveTreasureTmp:tmp];
+    loadTreasureProgress(); // 0x9ab2c
+
+    // stop(1) rewinds GET_WALL to frame 0 and leaves it drawn, so the next state can poll
+    // isAnimating() for the one-shot to finish. Ghidra: 0x9ab38.
+    m_rouletteLayers[kRouletteLayerGetWall]->stop(1);
+    m_state = kAcMainStateWallPieceWait;
+}
+
+// case 0x19 — the same shape as case 0x17 for a music-piece square. Ghidra: 0x9ab4a.
+void AcMainTask::stateMusicPieceGrant() {
+    if (sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, m_curNode->slotId)) {
+        m_state = kAcMainStateBoardReveal; // 0x9ab4a..0x9ab88
+        return;
+    }
+
+    [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeItemGet]];
+
+    TreasureTmpData tmp = [UserSettingData treasureTmp]; // 0x9abca
+    tmp.musicPieceMask |= 1 << m_curNode->slotId;        // 0x9abce..0x9abe8
+    [UserSettingData saveTreasureTmp:tmp];               // 0x9abf4
+    loadTreasureProgress();                              // 0x9abfc
+    m_rouletteLayers[kRouletteLayerGetMusic]->stop(1);   // 0x9ac08
+    m_state = kAcMainStateMusicPieceWait;
+}
+
+// cases 0x18 and 0x1a — hold while a piece-reveal overlay plays out, then drop back into the
+// board loop. Both states load their layer and branch to the same tail, so they are one body:
+// case 0x18 passes GET_WALL from +0x5c (0x9ab42) and case 0x1a GET_MUSIC from +0x58 (0x9ac12).
+// Ghidra: the shared tail at 0x9c62c.
+void AcMainTask::statePieceRevealWait(int layerIndex) {
+    if (!m_rouletteLayers[layerIndex]->isAnimating()) { // 0x9c632
+        m_state = kAcMainStateBoardReveal;              // 0x9c638
+    }
 }
 
 // case 0x11 — the goal square was tapped. Play the goal SE, arm the friend-meet fade, roll and

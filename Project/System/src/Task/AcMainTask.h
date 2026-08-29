@@ -174,12 +174,19 @@ private:
     void stateSquareArrive();             // case 0x0d (the token settles on a square)
     void stateShowArrows();               // case 0x0f (light the directions the square opens on)
     void stateSquareLabelWait();          // case 0x0e (hold the label, then route the tap)
-    void stateGoalAward();                // case 0x11 (roll and hand out the goal reward)
-    void stateGoalRewardShow();           // case 0x12 (play the matching goal board)
-    void stateMusicCompleteShow();        // case 0x13 (the music-collection reveal)
-    void stateWallCompleteShow();         // case 0x14 (the wallpaper-collection reveal)
-    void stateNewMapShow();               // case 0x15 (the new-area reveal, else arm the fade)
-    void stateGoalFinish();               // case 0x16 (reload the SE pool, back to map-select)
+    void stateWallPieceGet();             // case 0x17 (bank a wallpaper piece, arm GET_WALL)
+    void stateMusicPieceGrant();          // case 0x19 (bank a music piece, arm GET_MUSIC)
+    /**
+     * Cases 0x18 and 0x1a: hold while a piece-reveal overlay plays out.
+     * @param layerIndex The m_rouletteLayers slot to poll, GET_WALL or GET_MUSIC.
+     */
+    void statePieceRevealWait(int layerIndex);
+    void stateGoalAward();         // case 0x11 (roll and hand out the goal reward)
+    void stateGoalRewardShow();    // case 0x12 (play the matching goal board)
+    void stateMusicCompleteShow(); // case 0x13 (the music-collection reveal)
+    void stateWallCompleteShow();  // case 0x14 (the wallpaper-collection reveal)
+    void stateNewMapShow();        // case 0x15 (the new-area reveal, else arm the fade)
+    void stateGoalFinish();        // case 0x16 (reload the SE pool, back to map-select)
     /** Park the square message board over the token and publish its text anchor. */
     void sugorokuPositionSquareMessage();
     /** Advance and persist the tapped square's board-story page counter. */
