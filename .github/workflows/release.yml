@@ -117,13 +117,32 @@ jobs:
           version="${TAG#v}"
           gh api "repos/${REPO}/contents/CHANGELOG.md?ref=${TAG}" \
             -H 'Accept: application/vnd.github.raw' > changelog-at-tag.md
+          # The changelog is hard-wrapped at 100 columns, but release bodies render a single
+          # newline as a line break, so a wrapped bullet would break mid-sentence. Rejoin each
+          # bullet onto one line and keep blank lines as the only separators.
           awk -v ver="$version" '
+            function flush() {
+              if (buf != "") {
+                if (pending) { print ""; pending = 0 }
+                print buf
+                buf = ""
+              }
+            }
             index($0, "## [" ver "]") == 1 { found = 1; next }
             !found { next }
             index($0, "## [") == 1 { exit }
             /^\[[^][]+\]:[[:space:]]/ { exit }
             !started && $0 == "" { next }
-            { started = 1; sub(/^### /, "## "); print }
+            {
+              started = 1
+              line = $0
+              sub(/^### /, "## ", line)
+              if (line ~ /^[[:space:]]*$/) { flush(); pending = 1; next }
+              if (line ~ /^[[:space:]]*[-*+] / || line ~ /^#/) { flush(); buf = line; next }
+              if (buf != "") { sub(/^[[:space:]]+/, "", line); buf = buf " " line; next }
+              buf = line
+            }
+            END { flush() }
           ' changelog-at-tag.md > release-notes.md
           if [[ ! -s release-notes.md ]]; then
             echo "::error::CHANGELOG.md at ${TAG} has no section for ${version}."
