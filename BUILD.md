@@ -86,21 +86,28 @@ links the frameworks and copies resources.
 ## Continuous integration (GitHub Actions)
 
 [`.github/workflows/build.yml`](.github/workflows/build.yml) builds the app on a **macOS
-runner with Xcode** (`macos-14`) and uploads an **ad-hoc-signed** artifact (identity `-`,
-no Apple Developer account needed):
+runner with Xcode** (`macos-14`) and uploads an **ad-hoc-signed** artifact (identity `-`, no
+Apple Developer account needed). It runs on pushes to `master`, on `v*.*.*` tags, and on pull
+requests against `master`.
 
-- `xcode` (default) — configures the CMake/Xcode backend with the fetched leetal/ios-cmake
-  toolchain, builds `Release`, ad-hoc-signs `PopnRhythmin.app` (`codesign -s -`) and uploads
-  `PopnRhythmin-<version>-adhoc.ipa`, taking the version from `package.json`.
-- `theos` (opt-in, `continue-on-error`) — runs only on a manual dispatch with
-  `run_theos=true`: bootstraps Theos and runs `make -C theos package` (Theos fake-signs via
-  `ldid`), producing a `.deb`.
+Its single `xcode` job fetches the pinned leetal/ios-cmake toolchain, configures the
+CMake/Xcode backend with `RHYDBG`, `ENABLE_PATCHES`, and `ENABLE_OFFLINE_PATCHES` all on,
+builds `Release`, ad-hoc-signs `PopnRhythmin.app` (`codesign -s -`), and uploads
+`PopnRhythmin-<version>-adhoc.ipa`, taking the version from `package.json`.
 
-Defaults build **arm64 only** (GitHub runners run Xcode 12+, which cannot emit armv7). The
-`workflow_dispatch` inputs `ios_archs` / `deployment_target` override the slice set and floor;
-optional repository _variables_ `POPNRHYTHMIN_BINARY` (embed the board dialogue) and
-`RESOURCES_DIR` (bundle assets) are passed through when set. Since the tree has never been
-compiled, the first run is expected to surface real compile errors.
+CI builds **arm64 only** against a 12.0 deployment target, so the armv7 fat binary is a local
+Theos build only; Xcode 12 and later cannot emit armv7. The arch set and floor are job-level
+`env` values, so changing them means editing the workflow.
+
+The `POPNRHYTHMIN_BINARY` (embed the board dialogue) and `RESOURCES_DIR` (bundle assets)
+repository variables are commented out, so CI builds without the dialogue table and without
+bundled assets. The `cmake` invocation still passes each one through when it is set, so
+uncommenting the two `env` lines is all that is required.
+
+Pushing a `v*.*.*` tag additionally drives
+[`.github/workflows/release.yml`](.github/workflows/release.yml), which attaches this artifact
+to the GitHub release and publishes it. There is no Theos job in CI; the `.deb` is built
+locally.
 
 ## Notes / caveats
 
