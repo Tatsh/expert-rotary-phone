@@ -139,6 +139,7 @@ easytop
 easyyou
 elif
 endforeach
+endswith
 eors
 errno
 esac

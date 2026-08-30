@@ -18,21 +18,30 @@ jobs:
             echo 'proceed=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # A failed listing must not read as "no tag": that silently skips a real release behind a
+          # message blaming a missing tag, and nothing retries once every workflow has finished.
+          if ! tags_tsv=$(gh api "repos/${REPO}/git/matching-refs/tags/v" \
+              --jq '.[] | [.ref, .object.type, .object.sha] | @tsv'); then
+            echo '::error::Could not list the repository tags.'
+            exit 1
+          fi
           tag=''
           while IFS=$'\t' read -r ref obj_type obj_sha; do
             [[ -z "$ref" ]] && continue
+            # Signed release tags are annotated, so this branch is the normal path, not the rare
+            # one. Swallowing a failure here reports it as "no tag points at this SHA".
             if [[ "$obj_type" == 'commit' ]]; then
               target_sha="$obj_sha"
-            else
-              target_sha=$(gh api "repos/${REPO}/git/tags/${obj_sha}" \
-                --jq '.object.sha' 2>/dev/null || echo '')
+            elif ! target_sha=$(gh api "repos/${REPO}/git/tags/${obj_sha}" \
+                --jq '.object.sha'); then
+              echo "::error::Could not dereference annotated tag ${ref}."
+              exit 1
             fi
             if [[ "$target_sha" == "$HEAD_SHA" ]]; then
               tag="${ref#refs/tags/}"
               break
             fi
-          done < <(gh api "repos/${REPO}/git/matching-refs/tags/v" \
-            --jq '.[] | [.ref, .object.type, .object.sha] | @tsv')
+          done <<< "$tags_tsv"
           if [[ -z "$tag" ]]; then
             echo "No v* tag points at ${HEAD_SHA}, nothing to do."
             echo 'proceed=false' >> "$GITHUB_OUTPUT"
@@ -44,44 +53,89 @@ jobs:
       - env:
           GH_TOKEN: '${{ github.token }}'
           HEAD_SHA: '${{ github.event.workflow_run.head_sha }}'
+          REPO: '${{ github.repository }}'
           TAG: '${{ steps.guard.outputs.tag }}'
         id: 'check'
         if: "steps.guard.outputs.proceed == 'true'"
         name: 'Check all required workflows succeeded'
         run: |
-          tag="$TAG"
-          sha="$HEAD_SHA"
           all_success=true
           for workflow in build Prettier Spelling codeql markdownlint; do
-            run=$(gh run list --workflow "$workflow" --commit "$sha" --json status,conclusion --jq '.[0]')
-            if [[ -z "$run" || "$run" == 'null' ]]; then
+            # "The listing failed" must stay distinguishable from "no runs exist", since the latter
+            # is treated as optional: conflating them lets an API outage waive every gate at once.
+            if ! runs=$(gh run list --repo "$REPO" --workflow "$workflow" --commit "$HEAD_SHA" \
+                --json status,conclusion); then
+              echo "::error::Could not list runs for workflow '$workflow'."
+              exit 1
+            fi
+            if ! run_count=$(jq 'length' <<< "$runs"); then
+              echo "::error::Could not parse the run list for workflow '$workflow'."
+              exit 1
+            fi
+            # jq exits 0 and prints nothing on empty input, and [[ "" -eq 0 ]] is true, so an
+            # unchecked count would waive every gate as "did not run".
+            if [[ ! "$run_count" =~ ^[0-9]+$ ]]; then
+              echo "::error::Unexpected run count '${run_count}' for workflow '$workflow'."
+              exit 1
+            fi
+            if [[ "$run_count" -eq 0 ]]; then
               echo "Workflow '$workflow' did not run for this commit; treating as optional."
               continue
             fi
-            status=$(echo "$run" | jq -r '.status')
-            conclusion=$(echo "$run" | jq -r '.conclusion')
-            case "$conclusion" in
-              failure|cancelled|timed_out|startup_failure|action_required)
-                echo "::error::Workflow '$workflow' ${conclusion}."
-                exit 1
-                ;;
-              success|skipped|neutral) ;;
-              *)
-                if [[ "$status" == 'completed' ]]; then
-                  echo "::error::Workflow '$workflow' completed with unexpected conclusion '${conclusion}'."
-                  exit 1
-                fi
-                echo "Workflow '$workflow' still pending (status=${status})."
-                all_success=false
-                ;;
-            esac
+            # A tag push re-runs some workflows at the same SHA, so the same commit can carry both
+            # a successful run and a cancelled one. The tree is identical across them, so one
+            # success is enough; only a commit with no success at all blocks the release.
+            if jq -e 'any(.[]; .conclusion == "success" or .conclusion == "skipped"
+                or .conclusion == "neutral")' <<< "$runs" > /dev/null; then
+              continue
+            fi
+            if jq -e 'any(.[]; .status != "completed")' <<< "$runs" > /dev/null; then
+              echo "Workflow '$workflow' still pending."
+              all_success=false
+              continue
+            fi
+            echo "::error::Workflow '$workflow' has no successful run for ${HEAD_SHA}."
+            exit 1
           done
           if [[ "$all_success" != 'true' ]]; then
             echo 'Not all workflows have completed yet.'
             exit 0
           fi
-          echo "All required workflows succeeded for ${tag}."
+          echo "All required workflows succeeded for ${TAG}."
           echo 'ready=true' >> "$GITHUB_OUTPUT"
+      - env:
+          GH_TOKEN: '${{ github.token }}'
+          REPO: '${{ github.repository }}'
+          TAG: '${{ steps.guard.outputs.tag }}'
+        if: "steps.check.outputs.ready == 'true'"
+        name: 'Ensure the release exists'
+        run: |
+          if gh release view "$TAG" --repo "$REPO" > /dev/null 2>&1; then
+            echo "Release ${TAG} already exists."
+            exit 0
+          fi
+          version="${TAG#v}"
+          gh api "repos/${REPO}/contents/CHANGELOG.md?ref=${TAG}" \
+            -H 'Accept: application/vnd.github.raw' > changelog-at-tag.md
+          awk -v ver="$version" '
+            index($0, "## [" ver "]") == 1 { found = 1; next }
+            !found { next }
+            index($0, "## [") == 1 { exit }
+            /^\[[^][]+\]:[[:space:]]/ { exit }
+            !started && $0 == "" { next }
+            { started = 1; sub(/^### /, "## "); print }
+          ' changelog-at-tag.md > release-notes.md
+          if [[ ! -s release-notes.md ]]; then
+            echo "::error::CHANGELOG.md at ${TAG} has no section for ${version}."
+            exit 1
+          fi
+          printf '\n**Full Changelog**: https://github.com/%s/commits/%s\n' "$REPO" "$TAG" \
+            >> release-notes.md
+          echo "Creating draft release ${TAG}."
+          # Several workflows finishing at once can race here; losing the race is fine as long as
+          # the release ended up existing.
+          gh release create "$TAG" --repo "$REPO" --draft --title "$TAG" \
+            --notes-file release-notes.md || gh release view "$TAG" --repo "$REPO" > /dev/null
       - env:
           ARTIFACT: 'PopnRhythmin-adhoc-ipa'
           GH_TOKEN: '${{ github.token }}'
@@ -92,9 +146,10 @@ jobs:
         name: 'Attach the IPA to the release'
         run: |
           run_id=$(gh run list --repo "$REPO" --workflow build --commit "$HEAD_SHA" \
-            --json databaseId --jq '.[0].databaseId')
+            --json databaseId,conclusion \
+            --jq 'map(select(.conclusion == "success")) | .[0].databaseId // empty')
           if [[ -z "$run_id" ]]; then
-            echo "::error::No build run found for ${HEAD_SHA}."
+            echo "::error::No successful build run found for ${HEAD_SHA}."
             exit 1
           fi
           gh run download "$run_id" --repo "$REPO" --name "$ARTIFACT" --dir artifact
@@ -107,10 +162,27 @@ jobs:
           gh release upload "$TAG" "$ipa" --repo "$REPO" --clobber
       - env:
           GH_TOKEN: '${{ github.token }}'
+          REPO: '${{ github.repository }}'
+          TAG: '${{ steps.guard.outputs.tag }}'
+        if: "steps.check.outputs.ready == 'true'"
+        name: 'Verify the IPA is attached'
+        run: |
+          assets=$(gh release view "$TAG" --repo "$REPO" --json assets \
+            --jq '[.assets[].name] | join(" ")')
+          echo "Assets on ${TAG}: ${assets:-<none>}"
+          ipa_count=$(gh release view "$TAG" --repo "$REPO" --json assets \
+            --jq '[.assets[] | select(.name | endswith(".ipa"))] | length')
+          if [[ "$ipa_count" -eq 0 ]]; then
+            echo "::error::No .ipa asset on ${TAG}; refusing to publish it."
+            exit 1
+          fi
+      - env:
+          GH_TOKEN: '${{ github.token }}'
+          REPO: '${{ github.repository }}'
           TAG: '${{ steps.guard.outputs.tag }}'
         if: "steps.check.outputs.ready == 'true'"
         name: 'Publish release'
-        run: 'gh release edit "$TAG" --draft=false'
+        run: 'gh release edit "$TAG" --repo "$REPO" --draft=false'
       - env:
           GH_TOKEN: '${{ github.token }}'
           REPO: '${{ github.repository }}'
@@ -130,10 +202,13 @@ jobs:
               --jq '[.jobs[].steps[] | select(.name == "Publish release")][0].conclusion' 2>/dev/null || echo '')
             [[ "$step_conclusion" == 'skipped' ]]
           }
-          gh run list --repo "$REPO" --workflow 'Release' \
-            --json databaseId,status,conclusion --limit 100 \
-            | jq -r --arg self "$RUN_ID" \
-                '.[] | select((.databaseId|tostring) != $self) | select(.status == "completed") | [.databaseId, .conclusion] | @tsv' \
+          # This runs after the release is already published, so a hiccup here must not turn a
+          # successful release red.
+          prior_runs=$(gh run list --repo "$REPO" --workflow 'Release' \
+            --json databaseId,status,conclusion --limit 100 || echo '[]')
+          jq -r --arg self "$RUN_ID" \
+              '.[] | select((.databaseId|tostring) != $self) | select(.status == "completed") | [.databaseId, .conclusion] | @tsv' \
+              <<< "$prior_runs" \
             | while IFS=$'\t' read -r id conclusion; do
                 [[ -z "$id" ]] && continue
                 case "$conclusion" in
