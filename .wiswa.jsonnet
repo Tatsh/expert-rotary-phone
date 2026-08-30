@@ -97,7 +97,8 @@
       'codesign --verify --verbose=2 "${app}"',
       'mkdir -p build/ipa/Payload',
       'cp -R "${app}" build/ipa/Payload/',
-      '/usr/bin/zip -qry build/PopnRhythmin-latest.ipa build/ipa/Payload',
+      'ver=$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD)',
+      '/usr/bin/zip -qry "build/PopnRhythmin-${ver#v}.ipa" build/ipa/Payload',
     ],
     local cmake_build_commands = [
       'if ! [ -d .ios-cmake ]; then git clone --depth 1 --branch "$IOS_CMAKE_REF" https://github.com/leetal/ios-cmake.git .ios-cmake; fi',
