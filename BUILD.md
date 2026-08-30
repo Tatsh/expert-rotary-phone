@@ -91,7 +91,7 @@ no Apple Developer account needed):
 
 - `xcode` (default) — configures the CMake/Xcode backend with the fetched leetal/ios-cmake
   toolchain, builds `Release`, ad-hoc-signs `PopnRhythmin.app` (`codesign -s -`) and uploads
-  `PopnRhythmin-adhoc.ipa`.
+  `PopnRhythmin-<version>-adhoc.ipa`, taking the version from `package.json`.
 - `theos` (opt-in, `continue-on-error`) — runs only on a manual dispatch with
   `run_theos=true`: bootstraps Theos and runs `make -C theos package` (Theos fake-signs via
   `ldid`), producing a `.deb`.
