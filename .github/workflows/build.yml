@@ -56,21 +56,34 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER=""
       - name: Ad-hoc sign + package .ipa
         run: |
+          # package.json is the version provider cz bumps, so it is the one source that is correct
+          # on every trigger. A tag is not: this also builds on branch pushes and pull requests.
+          if ! VERSION="$(jq -er '.version' package.json)"; then
+            echo '::error::package.json has no version field.'
+            exit 1
+          fi
+          if [ -z "$VERSION" ]; then
+            echo '::error::package.json has an empty version field.'
+            exit 1
+          fi
           APP="$(find build -type d -name 'PopnRhythmin.app' -print -quit)"
           test -n "$APP" || { echo "PopnRhythmin.app not found under build/"; exit 1; }
           echo "Built app: $APP"
           codesign --force --sign - --timestamp=none "$APP"
           codesign --verify --verbose=2 "$APP"
-          rm -rf Payload PopnRhythmin-adhoc.ipa
+          IPA="PopnRhythmin-${VERSION}-adhoc.ipa"
+          rm -rf Payload PopnRhythmin-*-adhoc.ipa
           mkdir -p Payload
           cp -R "$APP" Payload/
-          /usr/bin/zip -qry PopnRhythmin-adhoc.ipa Payload
-          echo "Packaged: PopnRhythmin-adhoc.ipa"
+          /usr/bin/zip -qry "$IPA" Payload
+          echo "Packaged: ${IPA}"
       - name: Upload .ipa
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
+          # The artifact keeps an unversioned name so release.yml can ask for it by a fixed name;
+          # the versioned filename it carries is what reaches the release page.
           name: PopnRhythmin-adhoc-ipa
-          path: PopnRhythmin-adhoc.ipa
+          path: PopnRhythmin-*-adhoc.ipa
           if-no-files-found: error
 name: build
 'on':
