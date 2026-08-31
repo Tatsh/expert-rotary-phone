@@ -289,30 +289,30 @@ constexpr int32_t kTreasureMapTable[9][3] = {
 // Ghidra: DAT_0012fb30.  Parent map id for each main map; -1 = root (no
 // parent). The same table is used verbatim in TreasureData.m as kParentMapId[].
 // Element stride 4 (int32_t).  Source: read_memory(0x12fb30, 36).
-constexpr int32_t kParentMapTable[9] = { // DAT_0012fb30
-    5,
-    2,
-    3,
-    4,
-    -1,
-    1,
-    7,
-    -1,
-    -1};
+constexpr int32_t kParentMapTable[9] = {// DAT_0012fb30
+                                        5,
+                                        2,
+                                        3,
+                                        4,
+                                        -1,
+                                        1,
+                                        7,
+                                        -1,
+                                        -1};
 
 // Ghidra: DAT_0012fb54.  Sub-map type flags per main map.
 // Element stride 4 (int32_t).  0x12fb54 == 0x12fb30 + 9 * sizeof(int32_t).
 // Source: read_memory(0x12fb30, 72), bytes [36..71].
-constexpr int32_t kSubMapFlagTable[9] = { // DAT_0012fb54
-    0,
-    1,
-    0,
-    1,
-    0,
-    1,
-    0,
-    1,
-    2};
+constexpr int32_t kSubMapFlagTable[9] = {// DAT_0012fb54
+                                         0,
+                                         1,
+                                         0,
+                                         1,
+                                         0,
+                                         1,
+                                         0,
+                                         1,
+                                         2};
 
 // Ghidra: DAT_0012fb90 / DAT_0012fb9c.  Per-slot character message counts.
 // Source: read_memory(0x12fb90, 24) — 6 int32_t values, two groups of three.
