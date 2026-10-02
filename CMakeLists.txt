@@ -314,8 +314,8 @@ target_compile_options(popnrhythmin PRIVATE
     # libc++ hardening (Xcode's CLANG_CXX_STANDARD_LIBRARY_HARDENING "fast").
     # ABI-neutral, low overhead: bad indices / iterators trap instead of
     # corrupting memory.
-    # Xcode 16 itself defines the macro (DEBUG mode) in Debug; undefine it first so this is not a
-    # -Wmacro-redefined error.
+    # Xcode 16 itself defines the macro (DEBUG mode) in Debug; remove that definition first so this
+    # is not a macro redefinition error.
     $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-U_LIBCPP_HARDENING_MODE>
     $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST>
     -ftrivial-auto-var-init=zero)
