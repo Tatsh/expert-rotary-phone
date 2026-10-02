@@ -312,12 +312,9 @@ target_compile_options(popnrhythmin PRIVATE
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc-exceptions>
     # libc++ hardening (Xcode's CLANG_CXX_STANDARD_LIBRARY_HARDENING "fast").
-    # The CI toolchain is AppleClang 15 / LLVM 16, whose libc++ predates the
-    # _LIBCPP_HARDENING_MODE macro (LLVM 18+); the effective knob there is
-    # _LIBCPP_ENABLE_ASSERTIONS, which newer libc++ still honours (mapped to the
-    # hardened mode). ABI-neutral, low overhead: bad indices / iterators trap
-    # instead of corrupting memory.
-    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-D_LIBCPP_ENABLE_ASSERTIONS=1>
+    # ABI-neutral, low overhead: bad indices / iterators trap instead of
+    # corrupting memory.
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST>
     -ftrivial-auto-var-init=zero)
 
 # Warnings: most of Xcode's recommended GCC_WARN_* / CLANG_WARN_* set as real -W
