@@ -9,7 +9,6 @@ adid
 aesiv
 analyzer
 analyzer's
-Ångström
 anim
 animationing
 aninationing
@@ -100,7 +99,6 @@ cplusplus
 cryptor
 cstr
 ctype
-ＣＵＴＥ
 cutoff
 dakuten
 dalegate
@@ -141,7 +139,6 @@ elif
 endforeach
 endswith
 eors
-errno
 esac
 esbenp
 etop
@@ -218,8 +215,8 @@ iwyu
 jinja
 jsonnet
 jsonschema
-jubeatplus
 jubeat's
+jubeatplus
 judgeable
 jumptable
 kagome
@@ -236,7 +233,6 @@ kouka
 kuji
 layouted
 lclip
-ldid
 ldrb
 ldrd
 ldrh
@@ -269,7 +265,6 @@ memset
 messager
 metaclass
 methnames
-millis
 minitts
 minizip
 mislabeled
@@ -307,6 +302,7 @@ nilled
 nonatomic
 nonlocalized
 nonnull
+noone
 nowpoint
 nsascii
 nscferror
@@ -317,6 +313,7 @@ nsurl
 nsutf
 nulled
 nullptr
+numpydoc
 nyami
 nyan
 nyou
@@ -358,12 +355,10 @@ quot
 ranknum
 ranmir
 rbplus
-rctool
 rdparty
 recenter
 recenters
 recolored
-recon
 recpack
 rect
 reflec
@@ -402,7 +397,6 @@ scototal
 scta
 selec
 selref
-ＳＥＸＹ
 shellcheck
 shellformat
 shishamo
@@ -437,7 +431,6 @@ taskfactory
 tatsh
 teardowns
 tengu
-texel
 theos
 timeval
 tokusho
@@ -499,7 +492,6 @@ wiswa's
 wnewline
 wnon
 wobjc
-worktree
 woverloaded
 wpointer
 wrange
@@ -518,3 +510,6 @@ yuuri
 yvgs
 ziparchive
 zizmor
+Ångström
+ＣＵＴＥ
+ＳＥＸＹ

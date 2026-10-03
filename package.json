@@ -1,8 +1,8 @@
 {
   "_wiswa": {
-    "commandLine": "wiswa -d",
-    "lastRun": "2026-08-25T15:50:35Z",
-    "version": "65a1e3c"
+    "commandLine": "wiswa -q --skip-remote --cache-time 86400",
+    "lastRun": "2026-10-03T00:00:12Z",
+    "version": "4bb9fe2"
   },
   "contributors": ["Andrew Udvare <audvare@gmail.com>"],
   "cspell": {
@@ -27,6 +27,7 @@
       ".git/**",
       ".yarn/**/*.cjs",
       ".vscode/extensions.json",
+      ".wiswa-ci/**",
       "dist/**",
       "man/**",
       "*.pbxproj",
@@ -51,12 +52,12 @@
   "description": "Expert Rotary Phone.",
   "devDependencies": {
     "@prettier/plugin-xml": "^3.4.2",
-    "cspell": "^10.3.3",
-    "markdownlint-cli2": "^0.23.2",
-    "prettier": "^3.9.8",
+    "cspell": "^10.3.4",
+    "markdownlint-cli2": "^0.23.3",
+    "prettier": "^3.9.9",
     "prettier-plugin-ini": "^1.3.0",
     "prettier-plugin-sort-json": "^4.2.0",
-    "prettier-plugin-toml": "^2.0.6"
+    "prettier-plugin-toml": "^3.0.2"
   },
   "files": ["LICENSE.txt", "README.md"],
   "homepage": "https://tatsh.github.io/expert-rotary-phone/",
@@ -83,7 +84,7 @@
     "showFound": true
   },
   "name": "expert-rotary-phone",
-  "packageManager": "yarn@4.18.0",
+  "packageManager": "yarn@4.18.1",
   "prettier": {
     "endOfLine": "lf",
     "iniSpaceAroundEquals": true,
@@ -93,6 +94,12 @@
         "files": ["*.json.dist", "package.json"],
         "options": {
           "parser": "json"
+        }
+      },
+      {
+        "files": ["*.toml"],
+        "options": {
+          "singleQuote": false
         }
       },
       {
@@ -120,7 +127,7 @@
     "build": "if ! [ -d .ios-cmake ]; then git clone --depth 1 --branch \"$IOS_CMAKE_REF\" https://github.com/leetal/ios-cmake.git .ios-cmake; fi && cmake -B build -G Xcode -DCMAKE_TOOLCHAIN_FILE=\"./.ios-cmake/ios.toolchain.cmake\" -DDEPLOYMENT_TARGET=12.0 -DENABLE_BITCODE=NO -DIOS_ARCHS=arm64 -DPLATFORM=OS64 && cmake --build build --config Release -- CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO AD_HOC_CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM=\"\" PROVISIONING_PROFILE_SPECIFIER=\"\" && app=$(find build -type d -name PopnRhythmin.app -print -quit) && test -n \"${app}\" && codesign --force --sign - --timestamp=none \"${app}\" && codesign --verify --verbose=2 \"${app}\" && mkdir -p build/ipa/Payload && cp -R \"${app}\" build/ipa/Payload/ && ver=$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD) && /usr/bin/zip -qry \"build/PopnRhythmin-${ver#v}-adhoc.ipa\" build/ipa/Payload",
     "check-formatting": "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' -o -iname '*.mm.inc' > .to-format.txt && clang-format --dry-run --Werror --files=.to-format.txt && rm -f .to-format.txt && prettier --check . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2",
     "check-spelling": "cspell --no-progress",
-    "dict:update": "rm -f .vscode/dictionary.txt && cspell lint --no-progress --no-summary --unique --words-only | tr '[:upper:]' '[:lower:]' | sort -u > .vscode/dictionary.txt",
+    "dict:update": "rm -f .vscode/dictionary.txt && cspell lint --no-progress --no-summary --unique --words-only | LC_ALL=C tr '[:upper:]' '[:lower:]' | LC_ALL=C sort -u > .vscode/dictionary.txt",
     "format": "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' -o -iname '*.mm.inc' > .to-format.txt && clang-format -i --files=.to-format.txt && rm -f .to-format.txt && prettier -w . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2 --fix",
     "qa": "yarn check-spelling && yarn check-formatting"
   },
