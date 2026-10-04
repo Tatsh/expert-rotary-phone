@@ -6,6 +6,7 @@ env:
   IOS_CMAKE_REF: '21598aa550701d20654c032328f7e8710a14099b'
 jobs:
   xcode:
+    name: 'Build'
     permissions:
       attestations: write
       contents: write
@@ -93,3 +94,4 @@ name: build
       - 'v*.*.*'
   pull_request:
     branches: ['master']
+permissions: {}

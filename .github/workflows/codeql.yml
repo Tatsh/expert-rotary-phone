@@ -9,6 +9,7 @@ jobs:
     env:
       DEPLOYMENT_TARGET: '12.0'
       IOS_ARCHS: 'arm64'
+    name: 'Analyze'
     permissions:
       actions: read
       contents: read
@@ -65,3 +66,4 @@ name: codeql
     branches: ['master']
   schedule:
     - cron: '30 5 * * 1'
+permissions: {}
