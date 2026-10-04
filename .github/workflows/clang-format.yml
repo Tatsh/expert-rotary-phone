@@ -1,0 +1,45 @@
+jobs:
+  clang-format:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
+        with:
+          persist-credentials: false
+      - name: 'Check formatting (clang-format)'
+        run: |
+          version=$(yq '.repos[] | select(.repo == "https://github.com/pre-commit/mirrors-clang-format") | .rev' .pre-commit-config.yaml)
+          if [[ -z "$version" || "$version" == 'null' ]]; then
+            echo '::error::No mirrors-clang-format hook in .pre-commit-config.yaml.'
+            exit 1
+          fi
+          pipx run --spec "clang-format==${version#v}" clang-format --version
+          pipx run --spec "clang-format==${version#v}" clang-format --dry-run --Werror $(git ls-files '*.c' '*.cpp' '*.h' '*.mm')
+        shell: 'bash'
+name: 'clang-format'
+'on':
+  pull_request:
+    branches:
+      - 'master'
+    paths:
+      - '**/*.c'
+      - '**/*.cc'
+      - '**/*.cpp'
+      - '**/*.h'
+      - '**/*.hpp'
+      - '**/*.mm'
+      - '.github/workflows/clang-format.yml'
+      - '.pre-commit-config.yaml'
+  push:
+    branches:
+      - 'master'
+    paths:
+      - '**/*.c'
+      - '**/*.cc'
+      - '**/*.cpp'
+      - '**/*.h'
+      - '**/*.hpp'
+      - '**/*.mm'
+      - '.github/workflows/clang-format.yml'
+      - '.pre-commit-config.yaml'
+permissions:
+  contents: 'read'

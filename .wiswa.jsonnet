@@ -8,6 +8,9 @@
   want_codeql: false,
   want_tests: false,
   project_type: 'other',
+  want_clang_format: true,
+  // The file types the clang-format pre-commit hook checks (c and c++, which includes .mm).
+  clang_format_args: "$(git ls-files '*.c' '*.cpp' '*.h' '*.mm')",
   shared_ignore+: [
     '*.ipa',
     '*.ips',

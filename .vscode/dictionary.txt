@@ -333,6 +333,7 @@ passthrough
 pbxproj
 peaceopen
 pfex
+pipx
 planef
 pointb
 popkun
