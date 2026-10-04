@@ -391,6 +391,7 @@ rsvd
 rtti
 runk
 ryzumanage
+sbclaude
 schemafile
 scobase
 scobest

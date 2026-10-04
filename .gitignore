@@ -37,6 +37,7 @@
 /.mcp.json
 /.profile
 /.ripgreprc
+/.sbclaude-venv/
 /.theos-install/
 /.to-format.txt
 /.wiswa-ci/
