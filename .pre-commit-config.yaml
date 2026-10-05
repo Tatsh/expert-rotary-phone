@@ -95,11 +95,11 @@ repos:
   - hooks:
       - id: 'cspell'
     repo: 'https://github.com/streetsidesoftware/cspell-cli'
-    rev: 'v10.2.0'
+    rev: 'v10.3.0'
   - hooks:
       - id: 'clang-format'
         types_or:
           - 'c'
           - 'c++'
     repo: 'https://github.com/pre-commit/mirrors-clang-format'
-    rev: 'v22.1.5'
+    rev: 'v23.1.2'
