@@ -18,7 +18,7 @@ jobs:
           fi
           pipx run --spec "clang-format==${version#v}" clang-format --version
           # shellcheck disable=SC2035,SC2046 # The file arguments are globs and command substitutions.
-          pipx run --spec "clang-format==${version#v}" clang-format --dry-run --Werror $(git ls-files '*.c' '*.cpp' '*.h' '*.mm')
+          pipx run --spec "clang-format==${version#v}" clang-format --dry-run --Werror $(git ls-files '*.c' '*.cpp' '*.h' '*.mm' ':!:3rdparty/*')
         shell: 'bash'
 name: 'clang-format'
 'on':
