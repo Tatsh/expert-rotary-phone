@@ -7,41 +7,40 @@
 // Byte-verified layer names for the getLyrNo tables (Ghidra: DAT_001327d4 /
 // DAT_001327e8 / DAT_0013280c / DAT_001328f4). Each resolves within asset
 // group 5.
-constexpr const char *const kLyrSkillBoards[5] = { // -> +0x21c (+0x230 frame counts)
-    "SKILL_COM_BOARD",
-    "RETIRE_COM_BOARD",
-    "MUSIC_PEACE_LOCK1",
-    "WALL_PEACE_LOCK1",
-    "FRIEND_NAME_BOARD2"};
-constexpr const char *const kLyrMusicPeace[9] = { // -> +0x27c
-    "MUSIC_PEACE00",
-    "MUSIC_PEACE01",
-    "MUSIC_PEACE02",
-    "MUSIC_PEACE03",
-    "MUSIC_PEACE04",
-    "MUSIC_PEACE05",
-    "MUSIC_PEACE06",
-    "MUSIC_PEACE07",
-    "MUSIC_PEACE08"};
-constexpr const char *const kLyrWallPeace[9] = { // -> +0x2a0
-    "WALL_PEACE00",
-    "WALL_PEACE01",
-    "WALL_PEACE02",
-    "WALL_PEACE03",
-    "WALL_PEACE04",
-    "WALL_PEACE05",
-    "WALL_PEACE06",
-    "WALL_PEACE07",
-    "WALL_PEACE08"};
-constexpr const char *const kLyrIconMental[4] = { // -> +0x258 (+0x268 frame counts)
-    "ICON_MENTAL00",
-    "ICON_MENTAL01",
-    "ICON_MENTAL02",
-    "ICON_MENTAL03"};
+// -> +0x21c (+0x230 frame counts)
+constexpr const char *const kLyrSkillBoards[5] = {"SKILL_COM_BOARD",
+                                                  "RETIRE_COM_BOARD",
+                                                  "MUSIC_PEACE_LOCK1",
+                                                  "WALL_PEACE_LOCK1",
+                                                  "FRIEND_NAME_BOARD2"};
+// -> +0x27c
+constexpr const char *const kLyrMusicPeace[9] = {"MUSIC_PEACE00",
+                                                 "MUSIC_PEACE01",
+                                                 "MUSIC_PEACE02",
+                                                 "MUSIC_PEACE03",
+                                                 "MUSIC_PEACE04",
+                                                 "MUSIC_PEACE05",
+                                                 "MUSIC_PEACE06",
+                                                 "MUSIC_PEACE07",
+                                                 "MUSIC_PEACE08"};
+// -> +0x2a0
+constexpr const char *const kLyrWallPeace[9] = {"WALL_PEACE00",
+                                                "WALL_PEACE01",
+                                                "WALL_PEACE02",
+                                                "WALL_PEACE03",
+                                                "WALL_PEACE04",
+                                                "WALL_PEACE05",
+                                                "WALL_PEACE06",
+                                                "WALL_PEACE07",
+                                                "WALL_PEACE08"};
+// -> +0x258 (+0x268 frame counts)
+constexpr const char *const kLyrIconMental[4] = {
+    "ICON_MENTAL00", "ICON_MENTAL01", "ICON_MENTAL02", "ICON_MENTAL03"};
 
 // getFrameNo names (Ghidra: DAT_00132904 / DAT_0013296c / DAT_00132998 /
 // DAT_001329c0 / DAT_001329d0 / PTR_s_TRIANGLE01_05).
-constexpr const char *const kFrmBoard[26] = { // -> +0x2d0
+// -> +0x2d0
+constexpr const char *const kFrmBoard[26] = {
     "CHARA_KOMA00",  "MUSIC_PEACE_BOARD_S", "JACKET_QUESTION",   "JACKET_DISCOVERY",
     "BT_ROULETTE",   "BT_ROULETTE_NO",      "BT_ROULETTE_EVENT", "BT_ROULETTE_EVENT_NO",
     "BT_GATYA",      "BT_GATYA01",          "PAGE_BEFORE",       "PAGE_NEXT",
@@ -49,48 +48,46 @@ constexpr const char *const kFrmBoard[26] = { // -> +0x2d0
     "DEFENSE_01_02", "DEFENSE_01_03",       "DEFENSE_01_04",     "DEFENSE_00",
     "DEFENSE_02",    "BT_SQUARE01_00",      "DEFENSE_03_00",     "DEFENSE_03_01",
     "DEFENSE_03_02", "DEFENSE_03_03"};
-constexpr const char *const kFrmBase1[11] = { // -> +0x338
-    "BASE_00",
-    "BASE_01",
-    "BASE_02",
-    "BASE_03",
-    "BASE_04",
-    "BASE_06_00",
-    "BASE_06_01",
-    "BASE_07_00",
-    "BASE_07_01",
-    "BASE_09",
-    "BASE_10"};
-constexpr const char *const kFrmBase08[10] = { // -> +0x368
-    "BASE_08_00",
-    "BASE_08_01",
-    "BASE_08_02",
-    "BASE_08_03",
-    "BASE_08_04",
-    "BASE_08_05",
-    "BASE_08_06",
-    "BASE_08_07",
-    "BASE_08_08",
-    "BASE_08_09"};
-constexpr const char *const kFrmBase05[4] = { // -> +0x390
-    "BASE_05_00",
-    "BASE_05_01",
-    "BASE_05_02",
-    "BASE_05_03"};
-constexpr const char *const kFrmTriangle0[6] = { // -> +0x3a0 (interleaved with the below)
-    "TRIANGLE00_05",
-    "TRIANGLE00_04",
-    "TRIANGLE00_03",
-    "TRIANGLE00_02",
-    "TRIANGLE00_01",
-    "TRIANGLE00_00"};
-constexpr const char *const kFrmTriangle1[6] = { // -> +0x3b8
-    "TRIANGLE01_05",
-    "TRIANGLE01_04",
-    "TRIANGLE01_03",
-    "TRIANGLE01_02",
-    "TRIANGLE01_01",
-    "TRIANGLE01_00"};
+// -> +0x338
+constexpr const char *const kFrmBase1[11] = {"BASE_00",
+                                             "BASE_01",
+                                             "BASE_02",
+                                             "BASE_03",
+                                             "BASE_04",
+                                             "BASE_06_00",
+                                             "BASE_06_01",
+                                             "BASE_07_00",
+                                             "BASE_07_01",
+                                             "BASE_09",
+                                             "BASE_10"};
+// -> +0x368
+constexpr const char *const kFrmBase08[10] = {"BASE_08_00",
+                                              "BASE_08_01",
+                                              "BASE_08_02",
+                                              "BASE_08_03",
+                                              "BASE_08_04",
+                                              "BASE_08_05",
+                                              "BASE_08_06",
+                                              "BASE_08_07",
+                                              "BASE_08_08",
+                                              "BASE_08_09"};
+// -> +0x390
+constexpr const char *const kFrmBase05[4] = {
+    "BASE_05_00", "BASE_05_01", "BASE_05_02", "BASE_05_03"};
+// -> +0x3a0 (interleaved with the below)
+constexpr const char *const kFrmTriangle0[6] = {"TRIANGLE00_05",
+                                                "TRIANGLE00_04",
+                                                "TRIANGLE00_03",
+                                                "TRIANGLE00_02",
+                                                "TRIANGLE00_01",
+                                                "TRIANGLE00_00"};
+// -> +0x3b8
+constexpr const char *const kFrmTriangle1[6] = {"TRIANGLE01_05",
+                                                "TRIANGLE01_04",
+                                                "TRIANGLE01_03",
+                                                "TRIANGLE01_02",
+                                                "TRIANGLE01_01",
+                                                "TRIANGLE01_00"};
 
 // getUserNo names (Ghidra: DAT_00132a00) -> +0x3d0.
 constexpr const char *const kUsrBoard[26] = {
@@ -146,24 +143,24 @@ constexpr const char *const kArrowNames[4] = {
 // The 8 select-panel layers -> +0xa0. Two device-branched name tables (Ghidra:
 // DAT_001328d4 default / DAT_001328b4 tall-phone) share one order table
 // (DAT_0012f914).
-constexpr const char *const kPanelNamesDefault[8] = { // 640/960 assets
-    "IMG960",
-    "CHARACTER_SELECTION640_OPEN",
-    "CHARACTER_SELECTION640_OUT",
-    "CHARACTER_CHANGE640",
-    "COLLECTION_SELECT_640_OPEN",
-    "COLLECTION_SELECT_640_OUT",
-    "MUSIC_PEACE_S_960_OPEN",
-    "WALL_PEACE_S_960_OPEN"};
-constexpr const char *const kPanelNamesTall[8] = { // 1136 assets (tall phone, dt==2)
-    "IMG1136",
-    "CHARACTER_SELECTION1136_OPEN",
-    "CHARACTER_SELECTION1136_OUT",
-    "CHARACTER_CHANGE1136",
-    "COLLECTION_SELECT_1136_OPEN",
-    "COLLECTION_SELECT_1136_OUT",
-    "MUSIC_PEACE_S_1136_OPEN",
-    "WALL_PEACE_S_1136_OPEN"};
+// 640/960 assets
+constexpr const char *const kPanelNamesDefault[8] = {"IMG960",
+                                                     "CHARACTER_SELECTION640_OPEN",
+                                                     "CHARACTER_SELECTION640_OUT",
+                                                     "CHARACTER_CHANGE640",
+                                                     "COLLECTION_SELECT_640_OPEN",
+                                                     "COLLECTION_SELECT_640_OUT",
+                                                     "MUSIC_PEACE_S_960_OPEN",
+                                                     "WALL_PEACE_S_960_OPEN"};
+// 1136 assets (tall phone, dt==2)
+constexpr const char *const kPanelNamesTall[8] = {"IMG1136",
+                                                  "CHARACTER_SELECTION1136_OPEN",
+                                                  "CHARACTER_SELECTION1136_OUT",
+                                                  "CHARACTER_CHANGE1136",
+                                                  "COLLECTION_SELECT_1136_OPEN",
+                                                  "COLLECTION_SELECT_1136_OUT",
+                                                  "MUSIC_PEACE_S_1136_OPEN",
+                                                  "WALL_PEACE_S_1136_OPEN"};
 constexpr int kPanelOrder[8] = {28, 17, 17, 17, 13, 13, 12, 12};
 
 void AcMainTask::setupScene() {
