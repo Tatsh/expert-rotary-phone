@@ -1,6 +1,7 @@
 rules:
   adhoc-packages:
     ignore:
+      - 'pages.yml'
       - 'publish.yml'
   cache-poisoning:
     ignore:

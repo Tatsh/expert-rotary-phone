@@ -185,4 +185,14 @@
       },
     ],
   },
+  github+: {
+    zizmor+: {
+      rules+: {
+        // The API reference build installs a pinned Scalar release outside the lockfile.
+        'adhoc-packages'+: {
+          ignore: std.sort(super.ignore + ['pages.yml']),
+        },
+      },
+    },
+  },
 }
