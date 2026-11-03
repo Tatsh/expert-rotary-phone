@@ -328,6 +328,8 @@ target_compile_options(popnrhythmin PRIVATE
 target_compile_options(popnrhythmin PRIVATE
     -Wall
     -Wextra
+    -Wno-gnu-folding-constant
+    -Wno-int-conversion
     -Wshadow
     -Wcomma
     -Wnewline-eof
@@ -343,11 +345,11 @@ target_compile_options(popnrhythmin PRIVATE
     $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Wrange-loop-analysis>
     $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Wextra-semi>
     # Objective-C / Objective-C++
-    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wundeclared-selector>
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wno-undeclared-selector>
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wblock-capture-autoreleasing>
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wobjc-literal-conversion>
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wduplicate-method-match>
-    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wimplicit-retain-self>)
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wno-implicit-retain-self>)
 
 # The reconstruction faithfully uses the OpenGL ES 1.1 API, which Apple
 # deprecated wholesale on iOS 12 with no in-place replacement (Metal is a

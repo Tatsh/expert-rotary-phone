@@ -30,8 +30,9 @@ PopnRhythmin_FILES = $(shell find $(PROJECT_ROOT)/Project \
 PopnRhythmin_WARNINGS = -Wall -Wextra -Wshadow -Wcomma -Wnewline-eof -Wpointer-arith \
                         -Wimplicit-fallthrough -Wunreachable-code -Wconditional-uninitialized \
                         -Winfinite-recursion \
-                        -Wundeclared-selector -Wblock-capture-autoreleasing \
-                        -Wobjc-literal-conversion -Wduplicate-method-match -Wimplicit-retain-self
+                        -Wno-undeclared-selector -Wblock-capture-autoreleasing \
+                        -Wobjc-literal-conversion -Wduplicate-method-match -Wno-implicit-retain-self \
+                        -Wno-gnu-folding-constant -Wno-int-conversion
 PopnRhythmin_CFLAGS  = -std=gnu2x -ftrivial-auto-var-init=zero -fobjc-arc -fobjc-exceptions \
                        -DGLES_SILENCE_DEPRECATION \
                        $(PopnRhythmin_WARNINGS) \
