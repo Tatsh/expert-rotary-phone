@@ -336,6 +336,7 @@ pathlib
 pbxproj
 peaceopen
 pfex
+pipefail
 pipx
 planef
 pointb
@@ -503,6 +504,7 @@ wrange
 wshadow
 wundeclared
 wunreachable
+xcrun
 xors
 xorshift
 xrefs
