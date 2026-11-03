@@ -204,6 +204,67 @@
 + {
   want_scan_build: true,
   github+: { workflows+: {
-    scan_build+: import '.wiswa-scan-build.jsonnet',
+    scan_build+: {
+      build_command: 'cmake --build build --clean-first --parallel 2',
+      configure_command: 'cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE="${GITHUB_WORKSPACE}/.ios-cmake/ios.toolchain.cmake" -DDEPLOYMENT_TARGET="$DEPLOYMENT_TARGET" -DENABLE_BITCODE=NO -DIOS_ARCHS="$IOS_ARCHS" -DPLATFORM=OS64 -DRHYDBG=ON -DENABLE_PATCHES=ON -DENABLE_OFFLINE_PATCHES=ON',
+      documentation_steps: [
+        {
+          name: 'Install dependencies',
+          run: |||
+            sudo apt-get update
+            sudo apt-get install -y doxygen graphviz
+          |||,
+        },
+        {
+          name: 'Configure',
+          run: 'cmake -B "${GITHUB_WORKSPACE}/build" -DBUILD_DOCS_ONLY=ON',
+        },
+        {
+          name: 'Build documentation',
+          run: 'cmake --build "${GITHUB_WORKSPACE}/build" --target docs',
+        },
+        {
+          name: 'Build API reference',
+          run: |||
+            npm install --no-audit --no-fund --no-save \
+              --prefix "${RUNNER_TEMP}/scalar" @scalar/api-reference@1.66.1
+            mkdir -p "${GITHUB_WORKSPACE}/build/html/api"
+            cp -R "${RUNNER_TEMP}/scalar/node_modules/@scalar/api-reference/dist/browser" \
+              "${GITHUB_WORKSPACE}/build/html/api/scalar"
+            find "${GITHUB_WORKSPACE}/build/html/api/scalar" -name '*.map' -delete
+            # The bundle queries api.scalar.com on load whatever it is configured with, and would
+            # route a sent request through proxy.scalar.com. Point its service hosts at a name that
+            # cannot resolve, so the page cannot reach them even where its policy is not enforced.
+            find "${GITHUB_WORKSPACE}/build/html/api/scalar" -name '*.js' -exec sed -i \
+              -e 's#https://api\.scalar\.com#https://api.scalar.invalid#g' \
+              -e 's#https://proxy\.scalar\.com#https://proxy.scalar.invalid#g' \
+              -e 's#https://fonts\.scalar\.com#https://fonts.scalar.invalid#g' \
+              -e 's#https://registry\.scalar\.com#https://registry.scalar.invalid#g' {} +
+            cp openapi.yaml "${GITHUB_WORKSPACE}/build/html/api/openapi.yaml"
+            cp docs/api/index.html "${GITHUB_WORKSPACE}/build/html/api/index.html"
+          |||,
+        },
+      ],
+      env: {
+        BUILD_CONFIG: 'Release',
+        DEPLOYMENT_TARGET: '12.0',
+        IOS_ARCHS: 'arm64',
+        IOS_CMAKE_REF: '21598aa550701d20654c032328f7e8710a14099b',
+      },
+      runs_on: 'macos-15',
+      setup_steps: [
+        {
+          name: 'Install Ninja',
+          run: 'brew install ninja',
+        },
+        {
+          name: 'Fetch ios-cmake toolchain',
+          run: |||
+            git clone --revision="$IOS_CMAKE_REF" https://github.com/leetal/ios-cmake.git .ios-cmake
+          |||,
+        },
+      ],
+      workflow_file: 'pages.yml',
+    },
   } },
 }
