@@ -94,6 +94,7 @@ colored
 colors
 commitizen
 conn
+copytree
 coveragerc
 cplusplus
 cryptor
@@ -207,7 +208,6 @@ intptr
 ioapi
 iphoneos
 isspace
-iterdir
 itms
 ittt
 ivar
@@ -380,6 +380,7 @@ rhythmin
 rioc
 ripgreprc
 rksj
+rmtree
 rokka
 roku
 roop
@@ -407,6 +408,7 @@ shellcheck
 shellformat
 shishamo
 shou
+shutil
 sidemt
 siii
 sjis
@@ -502,7 +504,6 @@ woverloaded
 wpointer
 wrange
 wshadow
-wundeclared
 wunreachable
 xcrun
 xors
