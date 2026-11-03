@@ -207,6 +207,7 @@ intptr
 ioapi
 iphoneos
 isspace
+iterdir
 itms
 ittt
 ivar
@@ -299,6 +300,7 @@ neue
 newslink
 niled
 nilled
+nojekyll
 nonatomic
 nonlocalized
 nonnull
@@ -330,6 +332,7 @@ packlist
 parameteri
 parameteriv
 passthrough
+pathlib
 pbxproj
 peaceopen
 pfex
