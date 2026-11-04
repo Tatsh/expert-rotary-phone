@@ -284,3 +284,4 @@
     },
   } },
 }
++ { static_analysis_paths: ['Project'] }

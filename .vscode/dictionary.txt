@@ -396,6 +396,7 @@ rsvd
 rtti
 runk
 ryzumanage
+sarif
 sbclaude
 schemafile
 scobase
