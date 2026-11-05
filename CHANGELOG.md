@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+### Fixed
+
+- In patched builds, malformed values inside JSON arrays are rejected without raising an exception.
+- In patched builds, repeated failed image loads no longer leak texture memory.
+- Songs without kana readings no longer use a negative index to fetch their sort initials.
+
 ## [2.0.3] - 2026-08-30
 
 First release.

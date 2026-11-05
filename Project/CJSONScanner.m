@@ -115,6 +115,11 @@ static int HexToInt(unichar inCharacter) {
     default:
         break;
     }
+#ifdef ENABLE_PATCHES
+    if (theObject == nil) {
+        theResult = NO;
+    }
+#endif
     if (outObject != NULL) {
         *outObject = theObject;
     }
