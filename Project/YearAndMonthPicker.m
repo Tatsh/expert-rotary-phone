@@ -19,6 +19,11 @@
 // 100; month row 84 -> the middle band).
 - (instancetype)init {
     self = [super init];
+#ifdef ENABLE_PATCHES
+    if (self == nil) {
+        return nil;
+    }
+#endif
     if (self != nil) {
         self.delegate = self;
         self.dataSource = self;
