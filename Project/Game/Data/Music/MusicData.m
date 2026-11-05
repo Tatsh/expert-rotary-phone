@@ -82,7 +82,7 @@ static NSString *const kYomiLabels[10] = {
 
 // @ 0xc70e0 — the display label (hiragana) for a gojuon row; "#" past the end.
 + (NSString *)GetYomiString:(int)index {
-    if (index < 10) {
+    if ((unsigned int)index < 10) {
         return kYomiLabels[index];
     }
     return kDefaultInitial;

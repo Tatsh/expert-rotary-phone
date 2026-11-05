@@ -72,11 +72,10 @@ static NSString *const kGyoLabels[10] = {
 
 // @ 0x65c54 — the display label (hiragana) for a gojuon row; nil past the end.
 // The binary compares the index unsigned (cmp #0x9 / hi -> nil), so a negative
-// index also yields nil; the `index < 10` guard here is equivalent for the
-// 0..9 values actually passed (GetGyoIndex never returns > 9).
+// index also yields nil.
 //
 + (NSString *)GetGyoName:(int)index {
-    if (index < 10) {
+    if ((unsigned int)index < 10) {
         return kGyoLabels[index];
     }
     return nil;
