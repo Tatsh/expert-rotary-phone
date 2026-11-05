@@ -11,6 +11,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- In patched builds, failed settings encryption or archiving no longer crashes the app during save.
 - In patched builds, reward ID storage failures no longer crash the app when a caller omits the
   optional error output.
 - In patched builds, malformed values inside JSON arrays are rejected without raising an exception.

@@ -209,6 +209,11 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 // @ 0x5fbd8
 + (void)saveData:(NSData *)value Key:(NSString *)key {
+#ifdef ENABLE_PATCHES
+    if (value == nil) {
+        return;
+    }
+#endif
     NSUserDefaults *ud = NSUserDefaults.standardUserDefaults;
     NSData *cur = [ud valueForKey:key];
     if (cur != nil && [cur isEqualToData:value]) {
@@ -939,8 +944,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return nil;
 }
 
-// @ 0x61ad0 — UTF-8 encode, AES-encrypt, store under key "ConvertCode" (nil
-// clears it).
+// @ 0x61ad0 — UTF-8 encode, AES-encrypt, store under key "ConvertCode".
 + (void)saveConvertCode:(NSString *)code {
     NSData *enc = nil;
     if (code != nil) {
