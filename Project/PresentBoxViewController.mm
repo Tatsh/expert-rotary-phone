@@ -282,6 +282,9 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 // @ 0x24ba4 — recentre the empty-state banner in the view (the binary does NOT
 // chain to super here).
 - (void)viewWillAppear:(BOOL)animated {
+#ifdef ENABLE_PATCHES
+    [super viewWillAppear:animated];
+#endif
     CGRect f = self.view.frame;
     _emptyImageView.center = CGPointMake(f.size.width * 0.5f, f.size.height * 0.5f - 5.0f);
 }

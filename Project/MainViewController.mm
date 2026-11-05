@@ -819,7 +819,13 @@ static void MainDismissContainerVC(UIViewController *child) {
         // early-outs when its viewport is unchanged, so the stray rect stuck) and
         // clipped the scene.
         glClear(GL_COLOR_BUFFER_BIT);
-        m_AepManager->draw();
+#ifdef ENABLE_PATCHES
+        if (m_AepManager != nullptr) {
+#endif
+            m_AepManager->draw();
+#ifdef ENABLE_PATCHES
+        }
+#endif
 
         if (m_flgCapture) {
             if (m_capturedImg != nil) {

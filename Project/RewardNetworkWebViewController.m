@@ -119,6 +119,9 @@
 
 // @ 0xecb28
 - (void)viewDidDisappear:(BOOL)animated {
+#ifdef ENABLE_PATCHES
+    [super viewDidDisappear:animated];
+#endif
     [self appliListClosed];
     if ([self delegate] != nil &&
         [[self delegate] respondsToSelector:@selector(appListDidDisappear)]) {

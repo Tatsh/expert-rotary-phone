@@ -11,6 +11,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- In patched builds, map selection skips transitions until the right panel exists.
+- In patched builds, game rendering does not draw a frame when the scene manager is unavailable.
+- In patched builds, missing server details no longer crash the app during reward error handling.
 - In patched builds, failed settings encryption or archiving no longer crashes the app during save.
 - In patched builds, reward ID storage failures no longer crash the app when a caller omits the
   optional error output.

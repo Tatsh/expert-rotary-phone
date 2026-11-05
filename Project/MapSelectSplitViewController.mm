@@ -548,6 +548,12 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 - (void)touchWithTreasureData:(NSArray *)treasureData
                  mapHeadArray:(NSArray *)mapHeadArray
                     mainMapId:(int)mainMapId {
+#ifdef ENABLE_PATCHES
+    UIView *rightDummyView = _rightDummyView;
+    if (rightDummyView == nil) {
+        return;
+    }
+#endif
     if (_isAnimationing) {
         return;
     }
@@ -617,7 +623,11 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     //   released only by that nested transition's own completion.
     CGFloat origDummyW = _rightDummyView ? _rightDummyView.frame.size.width : 0.0f;
     CGFloat origHeaderW = _rightHeaderDummyView ? _rightHeaderDummyView.frame.size.width : 0.0f;
+#ifdef ENABLE_PATCHES
+    [UIView transitionWithView:rightDummyView
+#else
     [UIView transitionWithView:_rightDummyView
+#endif
         duration:0.25
         options:UIViewAnimationOptionCurveLinear
         animations:^{
@@ -662,6 +672,12 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 // snap the arrow home.
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (_scrollView != scrollView) {
+#ifdef ENABLE_PATCHES
+        UIView *rightDummyView = _rightDummyView;
+        if (rightDummyView == nil) {
+            return;
+        }
+#endif
         // The left map list moved: if the arrow is at home x and nothing is
         // animating, displace it off the panel and collapse/restore the right
         // clips. Guard: compare origin.x (first float of the frame struct) against
@@ -696,7 +712,11 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         // binary).
         CGFloat origDummyW = _rightDummyView ? _rightDummyView.frame.size.width : 0.0f;
         CGFloat origHeaderW = _rightHeaderDummyView ? _rightHeaderDummyView.frame.size.width : 0.0f;
+#ifdef ENABLE_PATCHES
+        [UIView transitionWithView:rightDummyView
+#else
         [UIView transitionWithView:_rightDummyView
+#endif
             duration:0.25
             options:UIViewAnimationOptionCurveLinear
             animations:^{

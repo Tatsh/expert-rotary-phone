@@ -191,6 +191,9 @@ static NSString *const kMsgNoPlayData =
 // @ 0xd05c4 — re-center the spinner cover on the controller view (no super call
 // in the binary).
 - (void)viewWillAppear:(BOOL)animated {
+#ifdef ENABLE_PATCHES
+    [super viewWillAppear:animated];
+#endif
     _dummyView.view.center =
         CGPointMake(self.view.frame.size.width * 0.5f, self.view.frame.size.height * 0.5f);
 }

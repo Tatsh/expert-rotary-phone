@@ -916,7 +916,9 @@ int NoteMng::judgeNoteHit(unsigned noteId) {
         note.flags |= (note.startTick < note.endTick) ? (NOTE_FLAG_BAD | NOTE_FLAG_LONG_FAILED) :
                                                         NOTE_FLAG_BAD;
         m_combo = 0;
+#ifndef ENABLE_PATCHES
         countsCombo = false;
+#endif
     }
 
     if (!(note.startTick < note.endTick) && !special) {

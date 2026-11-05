@@ -205,7 +205,11 @@ constexpr NSTimeInterval kModalCloseAnimationDuration = 0.3f;
 // (reproduced faithfully; matches the sibling SettingOtherTableViewController —
 // likely a copy/paste artifact in the original source).
 - (void)viewDidAppear:(BOOL)animated {
+#ifdef ENABLE_PATCHES
+    [super viewDidAppear:animated];
+#else
     [super viewWillDisappear:animated];
+#endif
 }
 
 // viewDidLoad @ 0x7f31c — super-only override, omitted.

@@ -29,6 +29,12 @@
 
 // The Applilink server-side external-pasteboard transport; the iOS 7 and later backend.
 
+#ifdef ENABLE_PATCHES
+typedef BOOL RecommendPasteboardMutationResult;
+#else
+typedef void RecommendPasteboardMutationResult;
+#endif
+
 /**
  * Read the server-side pasteboard record.
  * @param udid The device UDID.
@@ -50,12 +56,12 @@
  * @param adType The advertisement type.
  * @param error Receives the failure reason; may be NULL.
  */
-- (void)setPasteboardWithUdid:(NSString *)udid
-                  countryCode:(NSString *)countryCode
-                   categoryId:(NSString *)categoryId
-                     adIdFrom:(NSString *)adIdFrom
-                       adType:(NSString *)adType
-                        error:(NSError **)error;
+- (RecommendPasteboardMutationResult)setPasteboardWithUdid:(NSString *)udid
+                                               countryCode:(NSString *)countryCode
+                                                categoryId:(NSString *)categoryId
+                                                  adIdFrom:(NSString *)adIdFrom
+                                                    adType:(NSString *)adType
+                                                     error:(NSError **)error;
 /**
  * Delete the server-side pasteboard record.
  * @param udid The device UDID.
@@ -63,10 +69,10 @@
  * @param categoryId The category id.
  * @param error Receives the failure reason; may be NULL.
  */
-- (void)deletePasteboardWithUdid:(NSString *)udid
-                     countryCode:(NSString *)countryCode
-                      categoryId:(NSString *)categoryId
-                           error:(NSError **)error;
+- (RecommendPasteboardMutationResult)deletePasteboardWithUdid:(NSString *)udid
+                                                  countryCode:(NSString *)countryCode
+                                                   categoryId:(NSString *)categoryId
+                                                        error:(NSError **)error;
 
 /**
  * Decrypt an archived local-pasteboard record's fields back to plaintext strings.
@@ -430,12 +436,12 @@
 }
 
 // @ 0xeb23c
-- (void)setPasteboardWithUdid:(NSString *)udid
-                  countryCode:(NSString *)countryCode
-                   categoryId:(NSString *)categoryId
-                     adIdFrom:(NSString *)adIdFrom
-                       adType:(NSString *)adType
-                        error:(NSError **)error {
+- (RecommendPasteboardMutationResult)setPasteboardWithUdid:(NSString *)udid
+                                               countryCode:(NSString *)countryCode
+                                                categoryId:(NSString *)categoryId
+                                                  adIdFrom:(NSString *)adIdFrom
+                                                    adType:(NSString *)adType
+                                                     error:(NSError **)error {
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithCapacity:4];
     [params setValue:udid forKey:@"udid"];
     [params setValue:countryCode forKey:@"country_code"];
@@ -457,13 +463,21 @@
         if (error != NULL) {
             *error = requestError;
         }
+#ifdef ENABLE_PATCHES
+        return NO;
+#else
         return;
+#endif
     }
     if (response == nil) {
         if (error != NULL) {
             *error = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3eb userInfo:nil];
         }
+#ifdef ENABLE_PATCHES
+        return NO;
+#else
         return;
+#endif
     }
 
     id statusObj = [response objectForKey:@"status"];
@@ -504,13 +518,16 @@
                                                                     userInfo:response];
         }
     }
+#ifdef ENABLE_PATCHES
+    return status && errorCode == 100000000;
+#endif
 }
 
 // @ 0xeb678
-- (void)deletePasteboardWithUdid:(NSString *)udid
-                     countryCode:(NSString *)countryCode
-                      categoryId:(NSString *)categoryId
-                           error:(NSError **)error {
+- (RecommendPasteboardMutationResult)deletePasteboardWithUdid:(NSString *)udid
+                                                  countryCode:(NSString *)countryCode
+                                                   categoryId:(NSString *)categoryId
+                                                        error:(NSError **)error {
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithCapacity:3];
     [params setValue:udid forKey:@"udid"];
     [params setValue:countryCode forKey:@"country_code"];
@@ -528,13 +545,21 @@
         if (error != NULL) {
             *error = requestError;
         }
+#ifdef ENABLE_PATCHES
+        return NO;
+#else
         return;
+#endif
     }
     if (response == nil) {
         if (error != NULL) {
             *error = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3eb userInfo:nil];
         }
+#ifdef ENABLE_PATCHES
+        return NO;
+#else
         return;
+#endif
     }
 
     id statusObj = [response objectForKey:@"status"];
@@ -575,6 +600,9 @@
                                                                     userInfo:response];
         }
     }
+#ifdef ENABLE_PATCHES
+    return status && errorCode == 100000000;
+#endif
 }
 
 #pragma mark - Crypto helpers

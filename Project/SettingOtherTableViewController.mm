@@ -175,7 +175,11 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // @ 0xd48bc — NOTE: the binary tail-calls the *super* viewWillDisappear: here
 // (reproduced faithfully; likely a copy/paste artifact in the original source).
 - (void)viewDidAppear:(BOOL)animated {
+#ifdef ENABLE_PATCHES
+    [super viewDidAppear:animated];
+#else
     [super viewWillDisappear:animated];
+#endif
 }
 
 // @ 0xd48e8

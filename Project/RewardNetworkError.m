@@ -102,7 +102,11 @@ static NSMutableDictionary *g_pRewardErrorMessageDict = nil;
         }
     }
 
+#ifdef ENABLE_PATCHES
+    NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:userInfo ?: @{}];
+#else
     NSMutableDictionary *info = [NSMutableDictionary dictionaryWithDictionary:userInfo];
+#endif
     if (g_pRewardErrorMessageDict != nil) {
         NSString *message = g_pRewardErrorMessageDict[@((int)code)];
         if (message == nil) {

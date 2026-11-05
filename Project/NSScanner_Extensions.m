@@ -64,7 +64,9 @@
     }
     NSRange theRange;
     if (theComment == nil) {
+#ifndef ENABLE_PATCHES
         theRange = NSMakeRange(0, 0);
+#endif
     } else {
         theRange = [theComment rangeOfString:@"/*"];
         if (theRange.location == NSNotFound) {
