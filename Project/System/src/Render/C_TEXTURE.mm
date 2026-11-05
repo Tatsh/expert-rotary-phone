@@ -220,8 +220,7 @@ ne::C_TEXTURE *AepTextureCacheSentinel() {
 // Ghidra: FUN_0001bbf0 — resolve a bundled image path through the shared cache.
 // Returns the existing entry (with its refcount bumped) when the path is
 // already cached, else loads a fresh ne::C_TEXTURE, links it to the front of the
-// list, and returns it. Returns null when the image fails to load (the binary,
-// like this, leaves the failed allocation without an explicit delete). The
+// list, and returns it. Returns null when the image fails to load. The
 // neDebugLog calls are RHYDBG diagnostics that compile out in the shipped config.
 ne::C_TEXTURE *AepTextureCacheAcquire(const char *path) {
     ne::C_TEXTURE *sentinel = AepTextureCacheSentinel();
@@ -236,6 +235,9 @@ ne::C_TEXTURE *AepTextureCacheAcquire(const char *path) {
     ne::C_TEXTURE *tex = new ne::C_TEXTURE(); // operator new(0x48) + ctor FUN_000180c4
     if (!tex->load(path)) {                   // FUN_00018218 (returns 1 on success)
         neDebugLog("AepTextureCacheAcquire LOAD-FAILED path='%s'", path ? path : "(null)");
+#ifdef ENABLE_PATCHES
+        delete tex;
+#endif
         return nullptr;
     }
     neDebugLog("AepTextureCacheAcquire loaded path='%s' glName=%u w=%d h=%d",
