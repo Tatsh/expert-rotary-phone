@@ -19,7 +19,7 @@
 // The four settings panes the left column selects between (ゲーム / 遊び方 /
 // お問い合わせ / その他). The index is the tab row and picks both the right-pane
 // table and its navbar image. Ghidra: startViewAnimation's tbb switch @ 0xb6a8c.
-typedef NS_ENUM(NSInteger, SettingPane) {
+typedef NS_ENUM(int, SettingPane) {
     SettingPaneGame = 0,     // SettingGameTableViewController / set_game_navbar
     SettingPaneHowto = 1,    // SettingHowtoTableViewController / set_howto_navbar
     SettingPaneCustomer = 2, // SettingCustomerTableViewController / set_inquiry_navbar
