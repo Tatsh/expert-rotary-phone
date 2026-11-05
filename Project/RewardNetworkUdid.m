@@ -164,7 +164,13 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     NSError *deleteError = nil;
     [[[self sharedInstance] pasteBoard] deleteWithStorageIndex:storageIndex error:&deleteError];
     if (deleteError != nil) {
-        *error = deleteError;
+#ifdef ENABLE_PATCHES
+        if (error) {
+#endif
+            *error = deleteError;
+#ifdef ENABLE_PATCHES
+        }
+#endif
         return NO;
     }
     return YES;
@@ -197,7 +203,13 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
         return udid;
     }
 
-    *error = udidError;
+#ifdef ENABLE_PATCHES
+    if (error) {
+#endif
+        *error = udidError;
+#ifdef ENABLE_PATCHES
+    }
+#endif
     return [RewardNetworkUdid getAdvertisingUdid];
 }
 
@@ -229,7 +241,13 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
         NSError *setError = readError;
         [RewardNetworkUdid setNewUdid:advertisingUdid error:&setError];
         if (setError != nil) {
-            *error = [RewardNetworkError localizedApplilinkErrorWithCode:0x3f7];
+#ifdef ENABLE_PATCHES
+            if (error) {
+#endif
+                *error = [RewardNetworkError localizedApplilinkErrorWithCode:0x3f7];
+#ifdef ENABLE_PATCHES
+            }
+#endif
         }
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"ApplilinkReward.campaignFlg"];
         return advertisingUdid;
@@ -241,7 +259,13 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
         NSError *newError = oldError;
         [RewardNetworkUdid setNewUdid:advertisingUdid error:&newError];
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"ApplilinkReward.campaignFlg"];
-        *error = nil;
+#ifdef ENABLE_PATCHES
+        if (error) {
+#endif
+            *error = nil;
+#ifdef ENABLE_PATCHES
+        }
+#endif
         return advertisingUdid;
     }
 

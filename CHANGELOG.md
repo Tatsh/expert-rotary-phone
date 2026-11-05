@@ -11,6 +11,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- In patched builds, reward ID storage failures no longer crash the app when a caller omits the
+  optional error output.
 - In patched builds, malformed values inside JSON arrays are rejected without raising an exception.
 - In patched builds, repeated failed image loads no longer leak texture memory.
 - Songs without kana readings no longer use a negative index to fetch their sort initials.
