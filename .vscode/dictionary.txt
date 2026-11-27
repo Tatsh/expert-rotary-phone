@@ -94,7 +94,6 @@ colored
 colors
 commitizen
 conn
-copytree
 coveragerc
 cplusplus
 cryptor
@@ -332,11 +331,9 @@ packlist
 parameteri
 parameteriv
 passthrough
-pathlib
 pbxproj
 peaceopen
 pfex
-pipefail
 pipx
 planef
 pointb
@@ -380,7 +377,6 @@ rhythmin
 rioc
 ripgreprc
 rksj
-rmtree
 rokka
 roku
 roop
@@ -409,7 +405,6 @@ shellcheck
 shellformat
 shishamo
 shou
-shutil
 sidemt
 siii
 sjis
@@ -506,7 +501,6 @@ wpointer
 wrange
 wshadow
 wunreachable
-xcrun
 xors
 xorshift
 xrefs

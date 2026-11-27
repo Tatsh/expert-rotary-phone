@@ -5,6 +5,7 @@
 [![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/expert-rotary-phone)](https://github.com/Tatsh/expert-rotary-phone/tags)
 [![License](https://img.shields.io/github/license/Tatsh/expert-rotary-phone)](https://github.com/Tatsh/expert-rotary-phone/blob/master/LICENSE.txt)
 [![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/expert-rotary-phone/v2.0.3/master)](https://github.com/Tatsh/expert-rotary-phone/compare/v2.0.3...master)
+[![CodeQL](https://github.com/Tatsh/expert-rotary-phone/actions/workflows/codeql-actions.yml/badge.svg)](https://github.com/Tatsh/expert-rotary-phone/actions/workflows/codeql-actions.yml)
 [![Dependabot](https://img.shields.io/badge/Dependabot-enabled-blue?logo=dependabot)](https://github.com/dependabot)
 [![GitHub Pages](https://github.com/Tatsh/expert-rotary-phone/actions/workflows/pages.yml/badge.svg)](https://tatsh.github.io/expert-rotary-phone/)
 [![Stargazers](https://img.shields.io/github/stars/Tatsh/expert-rotary-phone?logo=github&style=flat)](https://github.com/Tatsh/expert-rotary-phone/stargazers)

@@ -1,18 +1,11 @@
-*.1
-*.3
-*.7
 *.c
 *.cmake
 *.cpp
-*.desktop
 *.h
 *.inc
 *.ipa
 *.ips
-*.j2
-*.jsonnet
 *.kate-swp
-*.libsonnet
 *.lock
 *.log
 *.m
@@ -29,7 +22,6 @@
 .cspellcache
 .decompile/
 .directory
-.eslintignore
 .pnp.*
 .shellcheckrc
 .venv/
